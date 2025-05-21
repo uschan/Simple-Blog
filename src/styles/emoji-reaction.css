@@ -1,0 +1,86 @@
+/* 表情反应组件样式 */
+.emoji-reaction-container {
+  display: inline-flex;
+  position: relative;
+}
+
+.emoji-main-button {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 8px;
+  border-radius: 16px;
+  transition: all 0.2s ease;
+  cursor: pointer;
+}
+
+.emoji-main-button:hover {
+  background-color: rgba(0, 0, 0, 0.05);
+}
+
+.dark .emoji-main-button:hover {
+  background-color: rgba(255, 255, 255, 0.1);
+}
+
+.emoji-reaction-selector {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  margin-top: 5px;
+  background-color: var(--color-bg-card, white);
+  border-radius: 8px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.15);
+  padding: 8px;
+  z-index: 100;
+  display: flex;
+  gap: 8px;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  transform-origin: top left;
+  animation: popup 0.2s ease;
+}
+
+.dark .emoji-reaction-selector {
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.emoji-option {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  padding: 6px;
+  cursor: pointer;
+  border-radius: 50%;
+  transition: transform 0.2s ease, background-color 0.2s ease;
+}
+
+.emoji-option:hover {
+  background-color: rgba(0, 0, 0, 0.05);
+  transform: scale(1.1);
+}
+
+.dark .emoji-option:hover {
+  background-color: rgba(255, 255, 255, 0.1);
+}
+
+@keyframes popup {
+  0% {
+    opacity: 0;
+    transform: scale(0.9) translateY(-10px);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+/* 适配移动端 */
+@media (max-width: 640px) {
+  .emoji-reaction-selector {
+    left: 50%;
+    transform: translateX(-50%);
+    transform-origin: top center;
+  }
+} 

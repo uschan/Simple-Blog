@@ -1,0 +1,152 @@
+/* 表情反应容器样式 */
+.emoji-reaction-container {
+    display: inline-block;
+    position: relative;
+    cursor: pointer;
+}
+
+/* 主容器布局 */
+.emoji-main-container {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+}
+
+/* 左侧表情部分 */
+.emoji-left-part {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    padding: 3px 5px;
+    border-radius: 20px;
+    transition: background-color 0.2s ease;
+}
+
+.emoji-left-part:hover {
+    background-color: rgba(0, 0, 0, 0.05);
+}
+
+.dark .emoji-left-part:hover {
+    background-color: rgba(255, 255, 255, 0.1);
+}
+
+/* 右侧部分 */
+.emoji-right-part {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    color: var(--color-text-light, #666);
+}
+
+/* 表情图标 */
+.emotion-icon {
+    width: 20px;
+    height: 20px;
+    display: inline-block;
+    vertical-align: middle;
+}
+
+/* 表情文本 */
+.emoji-reaction-text,
+.emoji-total-count {
+    font-size: 14px;
+    color: var(--color-text-light, #666);
+    margin-left: 4px;
+}
+
+/* 视图和分享项目 */
+.emoji-views-item,
+.emoji-share-item {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    user-select: none;
+    cursor: pointer;
+    color: var(--color-text-light, #6c757d);
+}
+
+.emoji-views-item:hover,
+.emoji-share-item:hover {
+    color: var(--color-text, #333);
+}
+
+/* 表情选择器 */
+.emoji-reaction-selector {
+    position: absolute !important; 
+    bottom: calc(100% + 10px) !important; /* 强制显示在上方且有距离 */
+    left: 0 !important;
+    top: auto !important; /* 覆盖其他可能的定位 */
+    right: auto !important;
+    transform: none !important; /* 防止变换影响位置 */
+    display: none; /* 默认隐藏 */
+    background-color: var(--color-bg-card, white);
+    border-radius: 8px;
+    box-shadow: 0 3px 10px rgba(0, 0, 0, 0.1);
+    padding: 8px;
+    z-index: 1000; /* 提高Z轴优先级 */
+    flex-wrap: wrap;
+    gap: 8px;
+    border: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+/* 选择器箭头 */
+.emoji-reaction-selector:after {
+    content: '';
+    position: absolute;
+    bottom: -6px;
+    left: 10px;
+    border-left: 6px solid transparent;
+    border-right: 6px solid transparent;
+    border-top: 6px solid var(--color-bg-card, white);
+}
+
+.dark .emoji-reaction-selector {
+    box-shadow: 0 3px 10px rgba(0, 0, 0, 0.3);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.dark .emoji-reaction-selector:after {
+    border-top-color: var(--color-bg-card, #333);
+}
+
+/* 活动选择器 */
+.emoji-selector-active {
+    display: flex;
+}
+
+/* 表情选项 */
+.emoji-reaction-option {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 6px;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+}
+
+.emoji-reaction-option:hover {
+    background-color: rgba(0, 0, 0, 0.05);
+}
+
+.dark .emoji-reaction-option:hover {
+    background-color: rgba(255, 255, 255, 0.1);
+}
+
+.emoji-reaction-option .emotion-icon {
+    width: 24px;
+    height: 24px;
+}
+
+/* 表情标签 */
+.emoji-reaction-label {
+    font-size: 12px;
+    margin-top: 4px;
+    color: var(--color-text-light, #666);
+}
+
+/* 为用户标记反应已被点击 */
+.emoji-reaction-clicked {
+    color: var(--color-primary, #007bff);
+} 

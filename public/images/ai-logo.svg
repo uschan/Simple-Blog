@@ -1,0 +1,37 @@
+<svg 
+  viewBox="25 105 150 70" 
+  height="40" 
+  width="85.72" 
+  preserveAspectRatio="none" 
+  xmlns="http://www.w3.org/2000/svg">
+    <path class="face" d="M35,125 C40,120 160,120 170,125 C175,135 175,165 170,170 C160,175 40,175 35,170 C25,160 30,130 35,125 Z" fill="#e0c9a6" stroke="#333" stroke-width="4" stroke-linecap="round" />
+    <path d="M65,132 C75,125 125,125 135,132 C145,140 145,150 135,158 C125,165 75,165 65,158 C55,150 55,140 65,132 Z" fill="#fff" stroke="#333" stroke-width="3" stroke-linecap="round" />
+    <path d="M80,145 L120,145" stroke="#333" stroke-width="3" stroke-linecap="round" />
+    <path d="M90,135 L90,155 M100,132 L100,158 M110,135 L110,155" stroke="#333" stroke-width="2" stroke-linecap="round" />
+    <path d="M125,145 L135,138 C138,142 138,148 135,152 Z" fill="#333" stroke="#333" stroke-width="1" stroke-linejoin="round" />
+    <path class="wiggle" d="M65,105 C70,110 75,112 80,118 M135,105 C130,110 125,112 120,118" stroke="#333" stroke-width="3" stroke-linecap="round" />
+    <circle cx="78" cy="155" r="3" fill="#333" class="wiggle" />
+    <circle cx="130" cy="160" r="2" fill="#333" class="wiggle" />
+    <circle cx="70" cy="140" r="2" fill="#333" class="wiggle" />
+    <style>
+        @keyframes wiggle {
+            0%, 100% { transform: rotate(0deg); }
+            25% { transform: rotate(-5deg); }
+            75% { transform: rotate(5deg); }
+        }
+        
+        .wiggle {
+            animation: wiggle 2s ease-in-out infinite;
+            transform-origin: center;
+        }
+        
+        .dark .wiggle,
+        .dark .face {
+            stroke: white;
+        }
+        
+        .dark circle.wiggle {
+            fill: white;
+        }
+    </style>
+</svg>

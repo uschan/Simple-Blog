@@ -1,0 +1,249 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* 导入表情反应组件样式 */
+@import '../styles/emoji-reaction.css';
+
+/* 导入文章详情页样式 */
+@import '../styles/article.css';
+
+:root {
+  --foreground-rgb: 0, 0, 0;
+  --background-start-rgb: 214, 219, 220;
+  --background-end-rgb: 255, 255, 255;
+  --primary-color: 79, 70, 229; /* Indigo 600 */
+  --primary-dark-color: 67, 56, 202; /* Indigo 700 */
+  --primary-light-color: 99, 102, 241; /* Indigo 500 */
+  --text-light-color: 107, 114, 128; /* Gray 500 */
+  --bg-card-color: 255, 255, 255; /* White */
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --foreground-rgb: 255, 255, 255;
+    --background-start-rgb: 0, 0, 0;
+    --background-end-rgb: 0, 0, 0;
+    --bg-card-color: 30, 41, 59; /* Slate 800 */
+  }
+}
+
+body {
+  color: rgb(var(--foreground-rgb));
+  background: linear-gradient(
+      to bottom,
+      transparent,
+      rgb(var(--background-end-rgb))
+    )
+    rgb(var(--background-start-rgb));
+}
+
+/* FontAwesome图标加载样式，防止闪烁 */
+.fontawesome-i2svg-active body .fas,
+.fontawesome-i2svg-active body .far,
+.fontawesome-i2svg-active body .fab {
+  visibility: visible;
+}
+
+.fontawesome-i2svg-pending body .fas,
+.fontawesome-i2svg-pending body .far,
+.fontawesome-i2svg-pending body .fab {
+  visibility: hidden;
+}
+
+/* 管理后台样式 */
+.admin-aside {
+  width: 280px;
+  transition: width 0.3s ease;
+}
+
+.admin-aside.collapsed {
+  width: 80px;
+}
+
+.sidebar-link {
+  @apply flex items-center py-3 px-4 rounded-lg text-text-light hover:bg-primary hover:bg-opacity-10 hover:text-primary mb-1 transition-colors;
+}
+
+.sidebar-link.active {
+  @apply bg-primary bg-opacity-10 text-primary font-medium;
+}
+
+.sidebar-link .icon {
+  @apply w-5 text-center mr-3;
+}
+
+.admin-aside.collapsed .sidebar-link {
+  @apply justify-center;
+}
+
+.admin-aside.collapsed .sidebar-link .icon {
+  @apply mr-0;
+}
+
+.admin-aside.collapsed .link-text,
+.admin-aside.collapsed .sidebar-section-title {
+  @apply hidden;
+}
+
+/* 媒体库网格布局 */
+.media-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: 16px;
+}
+
+.media-card {
+  @apply relative rounded-lg overflow-hidden bg-bg-card border border-gray-200 dark:border-gray-700 aspect-square flex flex-col;
+}
+
+.media-card:hover .media-actions,
+.media-card:hover .media-overlay {
+  opacity: 1;
+}
+
+.media-overlay {
+  @apply absolute inset-0 bg-gradient-to-t from-black/70 to-transparent p-3 flex flex-col justify-end opacity-0 transition-opacity duration-200;
+}
+
+.media-actions {
+  @apply absolute top-2 right-2 flex space-x-2 opacity-0 transition-opacity duration-200;
+}
+
+/* 模态框通用样式 */
+.modal-backdrop {
+  @apply fixed inset-0 bg-black bg-opacity-50 backdrop-blur-sm;
+}
+
+.modal-content {
+  @apply bg-bg-card rounded-lg shadow-2xl;
+}
+
+/* 按钮和表单样式增强 */
+button, 
+input, 
+textarea, 
+select {
+  @apply focus:outline-none;
+}
+
+.btn-primary {
+  @apply bg-primary text-white px-4 py-2 rounded-lg hover:bg-primary-dark transition-colors;
+}
+
+.btn-secondary {
+  @apply bg-gray-200 dark:bg-gray-700 px-4 py-2 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors;
+}
+
+.btn-danger {
+  @apply bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-600 transition-colors;
+}
+
+/* 自定义状态点颜色 */
+.comment-status-dot {
+  @apply w-2 h-2 rounded-full inline-block;
+}
+
+.status-approved {
+  @apply bg-green-500;
+}
+
+.status-pending {
+  @apply bg-yellow-500;
+}
+
+.status-spam {
+  @apply bg-red-500;
+}
+
+/* 进度条样式 */
+.progress-bar {
+  @apply h-2 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden;
+}
+
+.progress-value {
+  @apply h-full bg-primary rounded-full;
+}
+
+/* 移动设备触控目标增强 */
+.mobile-touch-target {
+  min-height: 44px;
+  min-width: 44px;
+}
+
+/* 状态卡片样式增强 */
+.stat-card {
+  @apply transition-transform hover:shadow-md hover:-translate-y-1;
+}
+
+/* 表格响应式增强 */
+@media (max-width: 640px) {
+  .table-responsive {
+    @apply block w-full overflow-x-auto;
+  }
+}
+
+/* 动画效果 */
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.animate-fadeIn {
+  animation: fadeIn 0.3s ease-in-out;
+}
+
+/* 标题块样式 - 重新设计 */
+.section-title-wrapper {
+  @apply mb-8; /* 增加底部间距 */
+}
+
+.section-title {
+  @apply flex items-center bg-gray-100 dark:bg-gray-800 py-3 px-4 rounded-lg text-xl font-bold relative;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+  border-left: 4px solid rgb(var(--primary-color));
+}
+
+/* 标题前的图标样式 */
+.section-title i {
+  @apply mr-4 text-primary text-lg flex items-center justify-center;
+  width: 28px;
+  height: 28px;
+}
+
+/* 标题悬停效果 */
+.section-title:hover {
+  @apply bg-gray-200 dark:bg-gray-700;
+  transition: all 0.2s ease;
+}
+
+/* 添加右侧装饰线 */
+.section-title::after {
+  content: "";
+  @apply absolute right-4 top-1/2 transform -translate-y-1/2 bg-gray-300 dark:bg-gray-600;
+  height: 1px;
+  width: 40px;
+}
+
+/* 为不同类型的标题提供不同的标识色 */
+.section-title.featured-title {
+  border-left-color: #f59e0b; /* 黄色 - 特色文章 */
+}
+
+.section-title.category-title {
+  border-left-color: #3b82f6; /* 蓝色 - 分类 */
+}
+
+.section-title.latest-title {
+  border-left-color: #10b981; /* 绿色 - 最新文章 */
+}
+
+/* 动画效果 */
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.6;
+  }
+} 

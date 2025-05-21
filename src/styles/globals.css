@@ -1,0 +1,208 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --color-primary: oklch(0.21 0.006 285.885);
+  --color-primary-light: oklch(0.967 0.001 286.375);
+  --color-primary-dark: oklch(0.141 0.005 285.823);
+  --color-bg: oklch(1 0 0);
+  --color-bg-card: oklch(1 0 0);
+  --color-text: oklch(0.141 0.005 285.823);
+  --color-text-light: oklch(0.552 0.016 285.938);
+  --border: oklch(0.92 0.004 286.32);
+}
+
+.dark {
+  --color-primary: oklch(0.92 0.004 286.32);
+  --color-primary-light: oklch(0.274 0.006 286.033);
+  --color-primary-dark: oklch(0.705 0.015 286.067);
+  --color-bg: oklch(0.141 0.005 285.823);
+  --color-bg-card: oklch(0.21 0.006 285.885);
+  --color-text: oklch(0.985 0 0);
+  --color-text-light: oklch(0.705 0.015 286.067);
+  --border: oklch(0.24 0 0);
+}
+
+/* 修改所有border-gray-200和border-gray-600相关类的样式 */
+.dark .border-gray-200, .dark .border-gray-600 {
+  border-color: oklch(0.24 0 0);
+}
+
+/* 为所有卡片项添加边框颜色 */
+.dark .pinterest-item.border {
+  border-color: oklch(0.24 0 0);
+}
+
+/* 确保所有分隔线在暗色模式下使用正确的颜色 */
+.dark .border-t {
+  border-color: oklch(0.24 0 0);
+}
+
+/* 顶部和底部边框 */
+.dark .border-b {
+  border-color: oklch(0.24 0 0);
+}
+
+/* 修复暗色模式下标签按钮的易读性问题 */
+.dark .bg-primary {
+  background-color: oklch(0.5 0.15 286.32); /* 更亮、更饱和的紫色 */
+  color: oklch(0.98 0 0); /* 更白的文字颜色 */
+  font-weight: 600; /* 加粗文字 */
+}
+
+/* 文章内容样式 */
+.article-content {
+  font-size: 0.875rem;
+  line-height: 1.5;
+}
+
+.article-content p {
+  margin-bottom: 1.5rem;
+}
+
+.article-content h2 {
+  font-size: 1.5rem;
+  font-weight: 700;
+  margin-top: 2rem;
+  margin-bottom: 1rem;
+}
+
+.article-content h3 {
+  font-size: 1.25rem;
+  font-weight: 700;
+  margin-top: 1.5rem;
+  margin-bottom: 0.75rem;
+}
+
+.article-content ul, .article-content ol {
+  margin-left: 1.5rem;
+  margin-bottom: 1.5rem;
+}
+
+.article-content ul {
+  list-style-type: disc;
+}
+
+.article-content ol {
+  list-style-type: decimal;
+}
+
+.article-content li {
+  margin-bottom: 0.5rem;
+}
+
+.article-content pre {
+  background-color: #f7f7f7;
+  padding: 1rem;
+  border-radius: 0.5rem;
+  overflow-x: auto;
+  margin-bottom: 1.5rem;
+}
+
+.dark .article-content pre {
+  background-color: oklch(0.15 0 0);
+}
+
+.article-content code {
+  font-family: monospace;
+}
+
+.article-content blockquote {
+  border-left: 4px solid var(--color-primary);
+  padding: 0.875rem;
+  font-style: italic;
+  margin-bottom: 1.5rem;
+}
+
+.article-content img {
+  max-width: 100%;
+  height: auto;
+  border-radius: 0.5rem;
+  margin: 2rem 0;
+}
+
+@layer components {
+  .btn {
+    @apply inline-flex items-center justify-center rounded-md border border-transparent px-4 py-2 text-sm font-medium shadow-sm focus:outline-none focus:ring-2 focus:ring-offset-2;
+  }
+  
+  .btn-primary {
+    @apply bg-primary text-white hover:bg-primary-dark focus:ring-primary;
+  }
+  
+  .btn-secondary {
+    @apply bg-white text-gray-700 border-gray-300 hover:bg-gray-50 focus:ring-primary;
+  }
+  
+  .card {
+    @apply bg-bg-card rounded-lg shadow p-4;
+  }
+  
+  /* Pinterest风格瀑布流布局 */
+  .pinterest-grid {
+    column-count: 1;
+    column-gap: 1.5rem;
+    width: 100%;
+  }
+  
+  @media (min-width: 640px) {
+    .pinterest-grid {
+      column-count: 2;
+    }
+  }
+  
+  @media (min-width: 1024px) {
+    .pinterest-grid {
+      column-count: 4;
+    }
+  }
+  
+  .pinterest-item {
+    break-inside: avoid;
+    margin-bottom: 1.5rem;
+    display: block;
+  }
+}
+
+/* 表情反应组件样式 */
+.emoji-reaction, .emoji-reaction-placeholder {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  cursor: pointer;
+  min-height: 1.5rem;
+  min-width: 3rem;
+}
+
+.emoji-reaction-placeholder {
+  background-color: #f0f0f0;
+  border-radius: 1rem;
+}
+
+.dark .emoji-reaction-placeholder {
+  background-color: rgba(255, 255, 255, 0.1);
+}
+
+.emoji-reaction .emotion-icon {
+  width: 1.25rem;
+  height: 1.25rem;
+}
+
+/* 表情图标样式 */
+.emotion-icon {
+  display: inline-block;
+}
+
+/* 确保SVG样式 */
+svg.emotion-icon {
+  width: 1.25rem;
+  height: 1.25rem;
+  vertical-align: middle;
+}
+
+/* 添加SVG暗色模式样式 */
+.dark .wiggle,
+.dark .face {
+  stroke: white;
+} 

@@ -4,6 +4,7 @@ import { useEffect, useRef, memo } from 'react';
 import EditorJS from '@editorjs/editorjs';
 import Quote from '@editorjs/quote';
 import ImageTool from '@editorjs/image';
+import List from '@editorjs/list';
 import CodeTool from '@editorjs/code';
 import Paragraph from '@editorjs/paragraph';
 import { uploadFile } from '@/lib/api';
@@ -49,6 +50,7 @@ const SimpleEditor = memo(({ initialValue = {}, onChange }: SimpleEditorProps) =
             holder: containerRef.current,
             tools: {
               paragraph: Paragraph,
+              list: List,
               quote: Quote,
               code: CodeTool,
               image: {
@@ -110,12 +112,17 @@ const SimpleEditor = memo(({ initialValue = {}, onChange }: SimpleEditorProps) =
                 }
               }
             },
+            
             data: initialValue.blocks?.length > 0 ? initialValue : {
               time: new Date().getTime(),
               blocks: []
             },
             placeholder: '开始写作...',
             minHeight: 400,
+            // 明确启用默认内联工具栏及所有选项
+            inlineToolbar: ['bold', 'italic', 'link'],
+            // 设置工具栏位置
+            tunes: ['delete', 'moveUp', 'moveDown'],
             onChange: async () => {
               try {
                 // 防止初始化时触发不必要的状态更新
@@ -195,7 +202,7 @@ const SimpleEditor = memo(({ initialValue = {}, onChange }: SimpleEditorProps) =
   }, [initialValue]); // 只在initialValue变化时重新初始化
 
   return (
-    <div className="border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden">
+    <div className="border border-gray-200 dark:border-0 rounded-lg overflow-hidden">
       <style jsx global>{`
         /* 基本样式 */
         .codex-editor__redactor {
@@ -205,6 +212,7 @@ const SimpleEditor = memo(({ initialValue = {}, onChange }: SimpleEditorProps) =
         .ce-block__content {
           max-width: 100% !important;
           margin: 0 auto;
+          position: relative;
         }
         
         .codex-editor {
@@ -215,6 +223,114 @@ const SimpleEditor = memo(({ initialValue = {}, onChange }: SimpleEditorProps) =
         .ce-toolbar__plus,
         .ce-toolbar__settings-btn {
           color: #4338ca !important;
+        }
+        
+        /* 修复块工具栏定位 - 调整到左侧 */
+        .ce-toolbar {
+          position: absolute;
+          left: -10px !important; /* 调整到左侧 */
+          right: auto !important;
+          background: none !important;
+        }
+        
+        .ce-toolbar__actions {
+          position: absolute;
+          left: -30px !important; /* 调整到左侧 */
+          right: auto !important;
+          top: 50% !important;
+          transform: translateY(-50%) !important;
+        }
+        
+        .ce-settings {
+          left: 0 !important;
+          right: auto !important;
+        }
+        
+        /* 仅在块激活或悬停时显示工具栏 */
+        .ce-toolbar {
+          opacity: 0;
+          visibility: hidden;
+          transition: opacity 150ms ease, visibility 150ms ease;
+        }
+        
+        .ce-toolbar.ce-toolbar--opened,
+        .ce-block:hover .ce-toolbar {
+          opacity: 1;
+          visibility: visible;
+        }
+        
+        /* 强制显示内联工具栏 */
+        .ce-inline-toolbar {
+          position: fixed !important;
+          background: #fff !important;
+          border: 1px solid #e5e7eb !important;
+          box-shadow: 0 3px 15px -3px rgba(13, 20, 33, 0.13) !important;
+          border-radius: 4px !important;
+          z-index: 9999 !important;
+          opacity: 1 !important;
+          visibility: visible !important;
+          transform: translateX(-50%) !important;
+          max-width: fit-content !important;
+          transition: none !important;
+          top: auto !important;
+          bottom: auto !important;
+          margin-top: -10px !important;
+        }
+        
+        .ce-inline-toolbar--showed {
+          display: block !important;
+          opacity: 1 !important;
+          visibility: visible !important;
+        }
+        
+        .ce-inline-toolbar[style*="display: none"] {
+          display: block !important;
+        }
+        
+        .ce-inline-toolbar__buttons {
+          padding: 0 6px !important;
+          display: flex !important;
+          align-items: center !important;
+        }
+        
+        .ce-inline-tool {
+          width: 36px !important;
+          height: 36px !important;
+          display: flex !important;
+          align-items: center !important;
+          justify-content: center !important;
+          margin: 0 !important;
+          padding: 0 !important;
+          border-radius: 4px !important;
+          color: #111827 !important;
+        }
+        
+        .ce-inline-tool:hover {
+          background: #f3f4f6 !important;
+        }
+        
+        .ce-inline-tool--active {
+          color: #4338ca !important;
+          background: #f3f4f6 !important;
+        }
+        
+        /* 暗模式下的内联工具栏 */
+        .dark .ce-inline-toolbar {
+          background: #1f2937 !important;
+          border-color: #374151 !important;
+        }
+        
+        .dark .ce-inline-tool {
+          color: #f9fafb !important;
+        }
+        
+        .dark .ce-inline-tool:hover {
+          background: #374151 !important;
+        }
+        
+        .dark .ce-inline-tool--active {
+          color: #6366f1 !important;
+          background: #374151 !important;
         }
         
         /* 代码块样式 */
@@ -230,10 +346,15 @@ const SimpleEditor = memo(({ initialValue = {}, onChange }: SimpleEditorProps) =
           background-color: #1e293b;
           color: #e2e8f0;
         }
+        
+        /* 强制显示所有工具栏 - 最后的修复尝试 */
+        [hidden] {
+          display: block !important;
+        }
       `}</style>
       <div 
         ref={containerRef} 
-        className="bg-white dark:bg-gray-900 min-h-[400px] p-4"
+        className="bg-white dark:bg-zinc-900 min-h-[400px] py-4 px-8"
       />
     </div>
   );

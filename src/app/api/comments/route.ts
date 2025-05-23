@@ -79,7 +79,7 @@ export async function POST(request: NextRequest) {
     // 获取客户端IP和用户代理
     const ip = request.headers.get("x-forwarded-for") || 
                request.headers.get("x-real-ip") || 
-               request.ip || 
+              //  request.ip || 
                "unknown";
     
     // 高频评论限制检查

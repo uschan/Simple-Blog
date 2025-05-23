@@ -5,14 +5,15 @@ import { Category } from '@/models';
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { slug: string } }
+  context: { params: { slug: string } }
 ) {
   try {
     // 连接数据库
     await connectDB();
     
-    // 获取slug参数
-    const { slug } = params;
+    // 获取slug参数 - 先await context.params再使用slug属性
+    const params = await context.params;
+    const slug = params.slug;
     
     if (!slug) {
       return NextResponse.json(

@@ -110,7 +110,7 @@ export default function AdminHome() {
           </div>
         </div>
         
-        <div className="bg-gray-100 dark:bg-zinc-800 rounded-lg p-6">
+        <div className="bg-gray-100 dark:bg-zinc-800 rounded-lg p-4">
           <h2 className="text-lg font-semibold mb-4">系统状态</h2>
           <div className="space-y-3">
             <div className="flex justify-between">

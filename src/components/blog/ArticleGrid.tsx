@@ -211,18 +211,20 @@ export default function ArticleGrid({ initialArticles, className = '' }: Article
               )}
             </div>
             
-            <div className="p-4">
+            <div className="px-4 py-2">
+
+              <Link href={`/article/${article.slug}`}>
+                <h3 className="text-xl font-normal text-primary mb-2">{article.title}</h3>
+              </Link>                
               <div className="flex items-center mb-2">
                 <i className="fa-solid fa-user-astronaut mr-1"></i>
                 <span className="text-xs text-text-light">
                   {article.authorName || '匿名'} | {formatDate(article.publishedAt || article.createdAt)}
                 </span>
               </div>
-              <Link href={`/article/${article.slug}`}>
-                <h3 className="text-lg font-normal text-primary mb-2">{article.title}</h3>
-              </Link>
-              <p className="text-text-light mb-4">{article.excerpt || article.summary}</p>
-              <div className="border-t border-gray-200 my-4"></div>
+
+              <p className="text-text-light mb-2">{article.excerpt || article.summary}</p>
+              <div className="border-t border-gray-200 my-2"></div>
               <div className="flex items-center justify-between">
                 <div className="flex items-center space-x-2">
                   <EmojiReaction 

@@ -115,7 +115,7 @@ export default function CommentList({ articleId, refreshTrigger }: CommentListPr
                 </div>
               </div>
               
-              <div className="text-text-light mb-2 whitespace-pre-wrap break-words">
+              <div className="text-sm text-text-light mb-2 whitespace-pre-wrap break-words">
                 {comment.content}
               </div>
               

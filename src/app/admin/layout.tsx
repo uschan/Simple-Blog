@@ -228,7 +228,7 @@ export default function AdminLayout({
         <div className="flex-1 overflow-y-auto w-full">
           {/* 顶部导航栏 */}
           <header className="bg-bg-card shadow-sm">
-            <div className="flex justify-between items-center px-6 py-2">
+            <div className="flex justify-between items-center px-2 py-2">
 
               <div className="flex items-center space-x-3">
                 <button 
@@ -269,7 +269,7 @@ export default function AdminLayout({
           </header>
           
           {/* 页面内容 */}
-          <main className="p-6">
+          <main className="p-3">
             {children}
           </main>
         </div>

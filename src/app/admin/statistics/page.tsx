@@ -129,9 +129,15 @@ export default function StatisticsPage() {
     }));
   };
   
+  // 获取选中的文章标题
+  const getSelectedArticleTitle = () => {
+    const article = articles.find(a => a._id === selectedArticle);
+    return article ? article.title : '未选择文章';
+  };
+  
   return (
     <div className="container mx-auto max-w-5xl">
-      <h1 className="text-xl font-semibold underline underline-offset-8 decoration-wavy mb-4 pb-2">/// 访问统计 ///</h1>
+      <h1 className="text-xl font-semibold underline underline-offset-8 decoration-wavy mb-4 pb-2">/// 访问统计总览 ///</h1>
       
       {error && (
         <div className="bg-red-100 border border-red-200 text-red-700 px-4 py-3 rounded mb-4">
@@ -139,7 +145,10 @@ export default function StatisticsPage() {
         </div>
       )}
       
+      {/* 单篇文章统计 */}
       <div className="bg-gray-100 dark:bg-zinc-800 rounded-lg shadow-sm border border-gray-200 p-4 mb-6">
+        <h2 className="text-lg font-medium mb-4">文章访问统计</h2>
+        
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
           {/* 文章选择器 */}
           <div>
@@ -183,31 +192,34 @@ export default function StatisticsPage() {
           </div>
         ) : selectedArticle && viewStats ? (
           <div>
-            {/* 统计卡片 */}
-            <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mb-6">
-              {/* 总访问量 */}
-              <div className="bg-blue-50 dark:bg-zinc-900 border border-blue-100 dark:border-0 rounded-lg p-4">
-                <h3 className="font-medium text-blue-800 mb-1">总访问量</h3>
-                <p className="text-3xl font-bold text-blue-900">{viewStats.totalViews}</p>
-              </div>
+            <div className="bg-white dark:bg-zinc-900 rounded-lg p-4 mb-4">
+              <h3 className="font-medium mb-2">{getSelectedArticleTitle()}</h3>
               
-              {/* 独立访客 */}
-              <div className="bg-green-50 dark:bg-zinc-900 border border-green-100 dark:border-0 rounded-lg p-4">
-                <h3 className="font-medium text-green-800 mb-1">独立访客</h3>
-                <p className="text-3xl font-bold text-green-900">{viewStats.uniqueVisitors}</p>
-              </div>
-              
-              {/* 最近访问 */}
-              <div className="bg-purple-50 dark:bg-zinc-900 border border-purple-100 dark:border-0 rounded-lg p-4">
-                <h3 className="font-medium text-purple-800 mb-1">最近访问</h3>
-                <p className="text-sm italic font-medium text-purple-900">
-                  {formatDate(viewStats.latestView)}
-                </p>
+              <div className="grid grid-cols-3 gap-4 mb-4">
+                {/* 文章访问量 */}
+                <div className="bg-blue-50 dark:bg-zinc-900/50 border border-blue-100 dark:border-0 rounded-lg p-3">
+                  <h4 className="text-xs font-medium text-blue-800 mb-1">访问量</h4>
+                  <p className="text-xl font-bold text-blue-900">{viewStats.totalViews}</p>
+                </div>
+                
+                {/* 独立访客 */}
+                <div className="bg-green-50 dark:bg-zinc-900/50 border border-green-100 dark:border-0 rounded-lg p-3">
+                  <h4 className="text-xs font-medium text-green-800 mb-1">独立访客</h4>
+                  <p className="text-xl font-bold text-green-900">{viewStats.uniqueVisitors}</p>
+                </div>
+                
+                {/* 最近访问 */}
+                <div className="bg-purple-50 dark:bg-zinc-900/50 border border-purple-100 dark:border-0 rounded-lg p-3">
+                  <h4 className="text-xs font-medium text-purple-800 mb-1">最近访问</h4>
+                  <p className="text-sm italic font-medium text-purple-900">
+                    {formatDate(viewStats.latestView)}
+                  </p>
+                </div>
               </div>
             </div>
             
             {/* 设备类型分布 */}
-            <div className="bg-white dark:bg-zinc-900 rounded-lg p-4 mb-6">
+            <div className="bg-white dark:bg-zinc-900 rounded-lg p-4">
               <h3 className="text-sm dark:text-blue-500 font-medium mb-2">⋙⋙◟设备类型分布◞</h3>
               <div className="flex flex-wrap gap-4">
                 {getDeviceChartData().map((item, index) => (
@@ -244,7 +256,7 @@ export default function StatisticsPage() {
             </div>
           </div>
         ) : (
-          <div className="text-center py-12 text-gray-500">
+          <div className="text-center py-8 text-gray-500">
             {selectedArticle ? '没有找到统计数据' : '请选择一篇文章查看统计数据'}
           </div>
         )}
@@ -252,7 +264,7 @@ export default function StatisticsPage() {
       
       {/* 访问量排行 */}
       <div className="bg-gray-100 dark:bg-zinc-800 rounded-lg shadow-sm border border-gray-200 p-4">
-        <h2 className="text-xl font-semibold underline underline-offset-8 decoration-wavy mb-4 pb-2">/// 访问量排行 ///</h2>
+        <h2 className="text-lg font-medium mb-4">访问量排行</h2>
         <div className="overflow-x-auto">
           <table className="text-sm min-w-full divide-y divide-gray-200">
             <thead>

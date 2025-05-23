@@ -162,7 +162,7 @@ export default function HeroSlider({ articles }: HeroSliderProps) {
         </div>
         
         <Link href={`/article/${currentArticle.slug}`} className="group">
-          <h2 className="text-white text-2xl md:text-3xl font-bold mb-2 group-hover:text-primary-light transition-colors">
+          <h2 className="text-white text-2xl md:text-3xl font-medium mb-2 group-hover:text-primary-light transition-colors">
             {currentArticle.title}
           </h2>
         </Link>
@@ -171,7 +171,7 @@ export default function HeroSlider({ articles }: HeroSliderProps) {
           {currentArticle.excerpt || currentArticle.summary}
         </p>
         
-        <div className="flex items-center">
+        {/* <div className="flex items-center">
           <div className="w-10 h-10 rounded-full bg-gray-600 mr-2 flex items-center justify-center text-white">
             <i className="fas fa-user"></i>
           </div>
@@ -181,7 +181,7 @@ export default function HeroSlider({ articles }: HeroSliderProps) {
               {formatDate(currentArticle.publishedAt || currentArticle.createdAt)}
             </p>
           </div>
-        </div>
+        </div> */}
       </div>
       
       {/* 轮播指示器 - 只在加载完成后显示 */}

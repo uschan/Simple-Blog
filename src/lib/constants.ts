@@ -7,7 +7,16 @@
 export const API_BASE_URL = '';
 
 // 服务器端API URL - 指向localhost的固定端口
-export const SERVER_API_URL = process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000';
+// export const SERVER_API_URL = process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000';
+export const SERVER_API_URL = (() => {
+  const envUrl = process.env.NEXT_PUBLIC_SITE_URL;
+  // 如果环境变量有值且包含协议，直接使用
+  if (envUrl && (envUrl.startsWith('http://') || envUrl.startsWith('https://'))) {
+    return envUrl;
+  }
+  // 否则，补全协议（开发环境默认用 http://）
+  return envUrl ? `http://${envUrl}` : 'http://localhost:3000';
+})(); 
 
 // 获取API URL - 客户端使用
 export function getApiUrl(path: string = ''): string {

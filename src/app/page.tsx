@@ -4,30 +4,15 @@ import OptimizedImage from '@/components/shared/OptimizedImage';
 import Link from 'next/link';
 import ArticleCard from '@/components/blog/ArticleCard';
 import EmojiReaction from '@/components/blog/EmojiReaction';
-import DynamicClientOnly from 'next/dynamic';
+import ShareButton from '@/components/blog/ShareButton'; // 导入分享按钮组件
+// 移除原来的动态导入
+// import DynamicClientOnly from 'next/dynamic';
 import { getServerApiUrl } from '@/lib/constants';
 import { serverFetch } from '@/lib/api'; // 导入服务端API工具
 import { convertToApiImageUrl } from '@/lib/utils'; // 导入URL转换工具
 
-// 动态导入客户端组件，避免服务器渲染错误
-const GalleryCard = DynamicClientOnly(() => import('@/components/blog/GalleryCard'), {
-  ssr: false,
-  loading: () => (
-    <div className="w-full h-[250px] bg-gray-200 animate-pulse flex items-center justify-center">
-      <i className="fas fa-images text-gray-400 text-3xl"></i>
-    </div>
-  )
-});
-
-// 动态导入轮播组件
-const HeroSlider = DynamicClientOnly(() => import('@/components/blog/HeroSlider'), {
-  ssr: false,
-  loading: () => (
-    <div className="relative w-full h-96 bg-gradient-to-b from-gray-300 to-gray-500 mb-8 rounded-lg overflow-hidden flex items-center justify-center animate-pulse">
-      <i className="fas fa-spinner fa-spin text-white text-3xl"></i>
-    </div>
-  )
-});
+// 导入客户端动态组件
+import { GalleryCard, HeroSlider } from '@/components/client/DynamicComponents';
 
 // 导入分页文章组件
 import ArticleGrid from '@/components/blog/ArticleGrid';
@@ -86,7 +71,7 @@ async function getLatestArticles(): Promise<Article[]> {
       return [];
     }
     
-    console.log(`成功获取${data.data.length}篇最新文章`);
+    // console.log(`成功获取${data.data.length}篇最新文章`);
     return data.data;
   } catch (error) {
     console.error('获取最新文章错误:', error);
@@ -127,7 +112,7 @@ async function getSliderArticles(): Promise<Article[]> {
       return [];
     }
     
-    console.log(`成功获取${data.data.length}篇轮播图文章`);
+    // console.log(`成功获取${data.data.length}篇轮播图文章`);
     return data.data;
   } catch (error) {
     console.error('获取轮播图文章错误:', error);
@@ -148,7 +133,7 @@ async function getFeaturedArticles(): Promise<Article[]> {
       return [];
     }
     
-    console.log(`成功获取${data.data.length}篇特色文章`);
+    // console.log(`成功获取${data.data.length}篇特色文章`);
     return data.data;
   } catch (error) {
     console.error('获取特色文章错误:', error);
@@ -159,7 +144,7 @@ async function getFeaturedArticles(): Promise<Article[]> {
 export default async function Home() {
   // 获取最新文章
   const apiArticles = await getLatestArticles();
-  console.log(`首页渲染${apiArticles.length}篇最新文章`);
+  // console.log(`首页渲染${apiArticles.length}篇最新文章`);
   
   // 直接获取轮播图文章
   const sliderArticles = await getSliderArticles();
@@ -237,9 +222,9 @@ export default async function Home() {
                   </div>
                 </div>
               
-              <div className="p-4">
+              <div className="px-4 py-2">
                 <Link href={`/article/${article.slug}`}>
-                  <h3 className="text-lg font-normal text-primary mb-2">{article.title}</h3>
+                  <h3 className="text-xl font-normal text-primary mb-2">{article.title}</h3>
                 </Link>             
                 <div className="flex items-center mb-2">
                   <i className="fa-solid fa-user-astronaut mr-1"></i>
@@ -248,7 +233,7 @@ export default async function Home() {
                     </span>
                 </div>
                   <p className="text-text-light mb-4">{article.excerpt || article.summary || ''}</p>
-                <div className="border-t border-gray-200 my-4"></div>
+                <div className="border-t border-gray-200 my-2"></div>
                 <div className="flex items-center justify-between">
                   <div className="flex items-center space-x-2">
                     <EmojiReaction 
@@ -264,9 +249,11 @@ export default async function Home() {
                       <i className="fa-solid fa-eye mr-1"></i>
                         <span>{article.viewCount || 0}</span>
                     </div>
-                    <div>
-                      <i className="fa-solid fa-share-nodes"></i>
-                    </div>
+                    <ShareButton 
+                      url={`/article/${article.slug}`} 
+                      title={article.title}
+                      summary={article.excerpt || article.summary || ''}
+                    />
                   </div>
                 </div>
               </div>

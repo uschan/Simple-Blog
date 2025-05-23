@@ -46,7 +46,7 @@ const SafeImageUploader = ({
             setTimeout(() => {
               handleUploadSuccess(path);
               setIsUploading(false);
-            }, 100);
+            }, 500); // 增加延迟到500ms，给状态更新留出更多时间
           }}
           onUploadError={(error) => console.error(`${fileType}上传失败:`, error)}
           fileType={fileType}
@@ -203,7 +203,7 @@ export default function SettingsPage() {
     loadSettings();
   }, []);
   
-  // 加载设置后验证analytics数据
+  // 保存设置后验证analytics数据
   useEffect(() => {
     if (!isLoading && settings) {
       if (!settings.analytics) {
@@ -300,6 +300,14 @@ export default function SettingsPage() {
     });
   };
   
+  // 显示成功消息的函数
+  const showSuccessMessage = (message: string) => {
+    setSuccessMessage(message);
+    // 使用一个稳定的超时器，避免多个超时器相互干扰
+    const timer = setTimeout(() => setSuccessMessage(''), 3000);
+    return () => clearTimeout(timer); // 返回清理函数用于组件卸载时
+  };
+  
   // 加载中状态
   if (isLoading) {
     return (
@@ -357,7 +365,7 @@ export default function SettingsPage() {
             
             {/* 网站描述 */}
             <div className="mb-4">
-              <label className="block text-sm text-gray-400 dark:text-blue-500 font-medium mb-2">⋙⋙◜网站描述◝</label>
+              <label className="block text-sm dark:text-blue-500 font-medium mb-2">⋙⋙◜网站描述◝</label>
               <textarea 
                 value={settings.siteDescription}
                 onChange={(e) => setSettings({...settings, siteDescription: e.target.value})}
@@ -597,6 +605,7 @@ export default function SettingsPage() {
             type="submit" 
             disabled={isSaving}
             className="px-6 py-2 rounded-lg transition-colors border border-primary-light bg-primary text-white hover:bg-primary-dark"
+            title="如果刚刚上传了图片，请等待处理完成后再保存"
           >
             {isSaving ? '保存中...' : '保存设置'}
           </button>

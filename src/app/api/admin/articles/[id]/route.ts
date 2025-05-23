@@ -5,11 +5,11 @@ import { Article } from '@/models';
 // 获取单个文章详情
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  context: { params: { id: string } }
 ) {
   try {
     await connectDB();
-    const id = params.id;
+    const id = context.params.id;
     
     if (!id) {
       return NextResponse.json(
@@ -53,11 +53,11 @@ export async function GET(
 // 更新单个文章
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  context: { params: { id: string } }
 ) {
   try {
     await connectDB();
-    const id = params.id;
+    const id = context.params.id;
     const formData = await request.json();
     
     if (!id) {
@@ -121,11 +121,11 @@ export async function PUT(
 // 删除单个文章
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  context: { params: { id: string } }
 ) {
   try {
     await connectDB();
-    const id = params.id;
+    const id = context.params.id;
     
     if (!id) {
       return NextResponse.json(

@@ -7,10 +7,10 @@ import connectDB from '@/lib/db';
 import { Media } from '@/models';
 
 // 确保上传目录存在
-async function ensureUploadDir() {
+async function ensureUploadDir(targetDir = 'uploads') {
   // 使用环境变量中的外部上传路径，如果未设置则回退到项目内的public目录
   const baseDir = process.env.UPLOAD_BASE_PATH || path.join(process.cwd(), 'public');
-  const uploadDir = path.join(baseDir, 'uploads');
+  const uploadDir = path.join(baseDir, targetDir);
   
   try {
     await fs.promises.access(uploadDir);
@@ -113,10 +113,17 @@ export async function POST(request: NextRequest) {
     const bytes = await file.arrayBuffer();
     const buffer = Buffer.from(bytes);
     
+    // 创建按年/月日结构的目录
+    const now = new Date();
+    const year = now.getFullYear();
+    const month = String(now.getMonth() + 1).padStart(2, '0'); 
+    const day = String(now.getDate()).padStart(2, '0');
+    const targetDir = `uploads/${year}/${month}-${day}`;
+    
     // 生成唯一文件名
     const fileExt = path.extname(file.name);
     const fileName = `${Date.now()}-${Math.floor(Math.random() * 1000)}${fileExt}`;
-    const uploadDir = await ensureUploadDir();
+    const uploadDir = await ensureUploadDir(targetDir);
     const filePath = path.join(uploadDir, fileName);
     
     // 写入文件
@@ -124,8 +131,8 @@ export async function POST(request: NextRequest) {
     
     // 保存文件信息到数据库
     // 生成URL路径（使用环境变量中设置的URL前缀）
-    const urlPrefix = process.env.NEXT_PUBLIC_UPLOAD_URL || '/uploads';
-    const mediaPath = `${urlPrefix}/${fileName}`;
+    const urlPrefix = process.env.NEXT_PUBLIC_UPLOAD_URL || '';
+    const mediaPath = `/${targetDir}/${fileName}`;
     
     const mediaInfo = {
       fileName,
@@ -133,6 +140,7 @@ export async function POST(request: NextRequest) {
       size: file.size,
       mimeType: file.type,
       path: mediaPath,
+      url: mediaPath,
       uploadedBy: userId
     };
     
@@ -217,10 +225,10 @@ export async function DELETE(request: NextRequest) {
       const uploadBasePath = process.env.UPLOAD_BASE_PATH;
       let filePath = '';
       
-      if (uploadBasePath && media.url && media.url.startsWith('/uploads/')) {
-        // 从URL中提取相对路径部分
-        const relativePath = media.url.replace(/^\/uploads\//, '');
-        filePath = path.join(uploadBasePath, 'uploads', relativePath);
+      if (uploadBasePath && media.url) {
+        // 从URL中提取相对路径部分（去掉开头的斜杠）
+        const relativePath = media.url.startsWith('/') ? media.url.substring(1) : media.url;
+        filePath = path.join(uploadBasePath, relativePath);
         
         // 检查文件是否存在，如果存在则删除
         if (fs.existsSync(filePath)) {

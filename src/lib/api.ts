@@ -39,7 +39,8 @@ export const apiRequest = async (endpoint: string, options: RequestInit = {}) =>
   // 构建完整的URL
   const url = normalizedEndpoint.startsWith('/api') 
     ? normalizedEndpoint
-    : `${API_BASE}${normalizedEndpoint}`;
+    : `${API_BASE}${normalizedEndpoint.replace(/^\/api/, '')}`;
+    // : `${API_BASE}${normalizedEndpoint}`;
     
   // 创建新的headers对象
   const headers = new Headers();
@@ -89,7 +90,7 @@ export const apiRequest = async (endpoint: string, options: RequestInit = {}) =>
     const response = await fetch(url, finalOptions);
     
     // 打印响应状态
-    console.log(`[API] 响应状态: ${response.status} ${response.statusText}`);
+    // console.log(`[API] 响应状态: ${response.status} ${response.statusText}`);
     
     // 处理未授权错误
     if (response.status === 401 && typeof window !== 'undefined') {
@@ -217,15 +218,15 @@ export const uploadFile = async (endpoint: string, formData: FormData) => {
   if (isAdminApi && typeof window !== 'undefined') {
     const token = localStorage.getItem('adminToken');
     if (token) {
-      console.log(`[API Upload] 使用令牌: ${token.substring(0, 15)}...`);
-      console.log(`[API Upload] 完整认证头: Bearer ${token}`);
+      // console.log(`[API Upload] 使用令牌: ${token.substring(0, 15)}...`);
+      // console.log(`[API Upload] 完整认证头: Bearer ${token}`);
       headers.set('Authorization', `Bearer ${token}`);
     } else {
       console.error('[API Upload] 错误: 访问管理员API但未找到令牌，这将导致未授权错误');
     }
   }
   
-  console.log(`[API] 上传文件: POST ${url}`);
+  // console.log(`[API] 上传文件: POST ${url}`);
   
   // 构建请求选项
   const options = {
@@ -261,7 +262,7 @@ export const uploadFile = async (endpoint: string, formData: FormData) => {
       clearTimeout(timeoutId);
       
       // 打印响应状态
-      console.log(`[API] 响应状态: ${response.status} ${response.statusText}`);
+      // console.log(`[API] 响应状态: ${response.status} ${response.statusText}`);
       
       // 处理未授权错误
       if (response.status === 401 && typeof window !== 'undefined') {
@@ -357,7 +358,7 @@ export const serverFetch = async (path: string, options: RequestInit = {}) => {
   try {
     const apiUrl = getServerApiUrl(path);
     const response = await fetch(apiUrl, options);
-    
+    // console.log('API URL:', apiUrl); 
     if (!response.ok) {
       throw new Error(`API请求失败: ${response.status}`);
     }

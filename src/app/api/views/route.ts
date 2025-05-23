@@ -114,8 +114,8 @@ export async function POST(request: Request) {
       );
     }
     
-    // 获取客户端信息
-    const headersList = headers();
+    // 获取客户端信息 - 确保先await headers()
+    const headersList = await headers();
     const ip = headersList.get('x-forwarded-for') || 
                headersList.get('x-real-ip') || 
                'unknown';

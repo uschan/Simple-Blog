@@ -4,12 +4,14 @@ import EmojiReaction from '@/components/blog/EmojiReaction';
 import ViewCounter from '@/components/blog/ViewCounter';
 import { getServerApiUrl } from '@/lib/constants';
 import { convertToApiImageUrl, extractIconClass } from '@/lib/utils';
-import dynamic from 'next/dynamic';
 import ShareButton from '@/components/blog/ShareButton';
 import { getSettings } from '@/lib/api/settings';
 import CommentSection from '@/components/blog/CommentSection';
 import OptimizedImage from '@/components/shared/OptimizedImage';
 import type { Metadata } from "next";
+
+// 导入客户端动态组件
+import { GalleryCard } from '@/components/client/DynamicComponents';
 
 // 解析EditorJS内容的函数，但当content为空时使用备用内容(summary或excerpt)
 function parseEditorContent(content: string, summary?: string, excerpt?: string) {
@@ -105,16 +107,6 @@ function parseEditorContent(content: string, summary?: string, excerpt?: string)
   }
 }
 
-// 动态导入画廊组件
-const GalleryCard = dynamic(() => import('@/components/blog/GalleryCard'), {
-  ssr: false,
-  loading: () => (
-    <div className="w-full bg-gray-200 animate-pulse flex items-center justify-center">
-      <i className="fas fa-images text-gray-400 text-3xl"></i>
-    </div>
-  )
-});
-
 // 创建安全的图标元素
 function createSocialIcon(iconHtml: string): JSX.Element {
   return <i className={extractIconClass(iconHtml)} />;
@@ -127,6 +119,20 @@ interface RelatedArticle {
   title: string;
   slug: string;
   coverImage: string;
+  viewCount?: number;
+  views?: number;
+  coverType?: 'image' | 'gallery' | 'video';
+  coverGallery?: string[];
+  coverVideo?: string;
+  galleryImages?: string[];
+  videoUrl?: string;
+  date?: string;
+  authorName?: string;
+  _id?: string; // 同时支持id和_id
+  categories?: Array<Category>;
+  featuredImage?: string;
+  summary?: string;
+  likes?: number;
 }
 
 interface Author {
@@ -172,7 +178,7 @@ interface Article {
 // 获取文章数据
 async function getArticleBySlug(slug: string): Promise<Article | null> {
   try {
-    console.log(`正在获取文章: ${slug}`);
+    // console.log(`正在获取文章: ${slug}`);
     const response = await fetch(getServerApiUrl(`/api/articles/${slug}`), {
       cache: 'no-store'
     });
@@ -189,7 +195,36 @@ async function getArticleBySlug(slug: string): Promise<Article | null> {
       return null;
     }
     
-    console.log(`成功获取文章: ${data.data.title}`);
+    // 处理相关文章数据，确保字段名和格式正确
+    if (data.data.relatedArticles && Array.isArray(data.data.relatedArticles)) {
+      // 输出调试信息
+      // console.log('原始相关文章数据:', JSON.stringify(data.data.relatedArticles[0], null, 2));
+      
+      data.data.relatedArticles = data.data.relatedArticles.map((related: any) => {
+        // 确保数据结构完整
+        return {
+          ...related,
+          id: related.id || related._id,
+          _id: related._id || related.id,
+          viewCount: related.views || 0,
+          views: related.views || 0,
+          coverType: related.coverType || 'image',
+          // 确保多媒体字段存在
+          galleryImages: related.galleryImages || [],
+          coverGallery: related.coverGallery || [],
+          videoUrl: related.videoUrl || '',
+          coverVideo: related.coverVideo || '',
+          // 添加其他可能缺失的字段
+          featuredImage: related.featuredImage || related.coverImage || '',
+          summary: related.summary || related.excerpt || ''
+        };
+      });
+      
+      // 输出调试信息
+      // console.log('处理后相关文章数据:', JSON.stringify(data.data.relatedArticles[0], null, 2));
+    }
+    
+    // console.log(`成功获取文章: ${data.data.title}`);
     return data.data;
   } catch (error) {
     console.error('获取文章错误:', error);
@@ -198,13 +233,15 @@ async function getArticleBySlug(slug: string): Promise<Article | null> {
 }
 
 // 生成动态元数据
-export async function generateMetadata({ params }: { params: { slug: string } }): Promise<Metadata> {
+export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
+  const { slug } = await params;
+  
   // 获取网站设置
   const settings = await getSettings();
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000';
   
   // 获取文章信息
-  const article = await getArticleBySlug(params.slug);
+  const article = await getArticleBySlug(slug);
   
   // 如果文章不存在，返回默认元数据
   if (!article) {
@@ -310,7 +347,7 @@ export async function generateMetadata({ params }: { params: { slug: string } })
       title: `${titleWithCategory} | ${settings.siteName}`, // OpenGraph需要完整标题
       description: description,
       type: 'article',
-      url: `${siteUrl}/article/${params.slug}`,
+      url: `${siteUrl}/article/${slug}`,
       images: [
         {
           url: mainImage,
@@ -332,8 +369,10 @@ export async function generateMetadata({ params }: { params: { slug: string } })
   };
 }
 
-export default async function ArticlePage({ params }: { params: { slug: string } }) {
-  const article = await getArticleBySlug(params.slug);
+export default async function ArticlePage({ params }: { params: Promise<{ slug: string }> }) {
+  const { slug } = await params;
+  
+  const article = await getArticleBySlug(slug);
   // 获取系统设置，包括社交媒体配置
   const settings = await getSettings();
   
@@ -447,13 +486,13 @@ export default async function ArticlePage({ params }: { params: { slug: string }
     <main className="container mx-auto p-4">
       {/* 返回链接 */}
       <div className="flex text-sm items-center mb-2  pb-2">     
-        <div className="flex items-center text-text-light mr-2">
+        <div className="flex items-center mr-2 text-lg font-medium underline underline-offset-8 decoration-wavy">
           <i className="fa-solid fa-umbrella-beach mr-1"></i>
-          <Link href="/" className="flex items-center text-text-light hover:text-primary">
+          <Link href="/" className="flex items-center hover:text-primary">
             <span>返回首页</span>
           </Link>
         </div>
-        <div className="flex items-center text-text-light">
+        <div className="flex items-center text-lg text-text-light font-medium underline underline-offset-8 decoration-wavy">
           <i className="fa-duotone fa-solid fa-angles-right mr-1"></i>
             {article.categories?.length ? (
               article.categories.map((cat: Category) => (
@@ -505,7 +544,7 @@ export default async function ArticlePage({ params }: { params: { slug: string }
                 </div>
         
                 {/* 分享和互动区域 */}
-                <div className="border-t border-gray-200 pt-4 mt-2">
+                <div className="border-t border-gray-200 pt-4">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center space-x-2">
             <EmojiReaction article={articleWithReactions} />
@@ -599,55 +638,112 @@ export default async function ArticlePage({ params }: { params: { slug: string }
                 {article.relatedArticles.map((related: RelatedArticle) => (
                   <div key={related.id} className="text-sm bg-bg-card rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-shadow border border-gray-200">
                     <div className="relative">
-                      {related.coverImage ? (
-                        <OptimizedImage
-                          src={convertToApiImageUrl(related.coverImage)}
-                          alt={related.title}
-                          width={0}
-                          height={0}
-                          sizes="100vw"
-                          className="w-full h-auto"
+                      {/* 根据coverType显示不同类型的媒体 */}
+                      {related.coverType === 'video' ? (
+                        // 视频类型
+                        <div className="relative">
+                          <video 
+                            src={convertToApiImageUrl(related.videoUrl || related.coverVideo || '')} 
+                            preload="metadata"
+                            controls
+                            className="w-full h-[250px] object-cover bg-gray-100"
+                          />
+                          {/* 视频标识 */}
+                          <div className="absolute bottom-2 right-2 bg-primary text-white text-xs px-2 py-1 rounded-full">
+                            <i className="fas fa-video mr-1"></i>
+                            视频
+                          </div>
+                          {/* 分类标签 */}
+                          <div className="absolute top-2.5 left-2.5 flex space-x-2 z-20">
+                            {related.categories?.length ? (
+                              related.categories.map((cat: Category) => (
+                                <span key={cat._id} className="bg-primary/90 text-white px-3 py-1.5 text-xs font-medium rounded-full border border-white/20 shadow-md backdrop-blur-sm">
+                                  {cat.name}
+                                </span>
+                              ))
+                            ) : null}
+                          </div>
+                        </div>
+                      ) : related.coverType === 'gallery' ? (
+                        // 多图类型 - 使用轮播组件
+                        <GalleryCard 
+                          images={
+                            related.galleryImages?.length ? related.galleryImages.map(img => convertToApiImageUrl(img)) :
+                            related.coverGallery?.length ? related.coverGallery.map(img => convertToApiImageUrl(img)) :
+                            related.featuredImage || related.coverImage ? [convertToApiImageUrl(related.featuredImage || related.coverImage || '')] : []
+                          }
+                          title={related.title}
+                          category={related.categories?.length ? related.categories[0] : undefined}
                         />
                       ) : (
-                        <div className="w-full h-32 bg-gray-200 flex items-center justify-center">
-                          <i className="fas fa-file-alt text-gray-400 text-xl"></i>
+                        // 默认单图类型
+                        <div className="relative">
+                          {related.featuredImage || related.coverImage ? (
+                            <OptimizedImage 
+                              src={convertToApiImageUrl(related.featuredImage || related.coverImage || '')} 
+                              alt={related.title}
+                              width={400}
+                              height={250}
+                              className="w-full"
+                            />
+                          ) : (
+                            <div className="w-full h-[250px] bg-gray-200 flex items-center justify-center">
+                              <i className="fas fa-file-alt text-gray-400 text-3xl"></i>
+                            </div>
+                          )}
+                          {/* 分类标签 */}
+                          <div className="absolute top-2.5 left-2.5 flex space-x-2 z-20">
+                            {related.categories?.length ? (
+                              related.categories.map((cat: Category) => (
+                                <span key={cat._id} className="bg-primary/90 text-white px-3 py-1.5 text-xs font-medium rounded-full border border-white/20 shadow-md backdrop-blur-sm">
+                                  {cat.name}
+                                </span>
+                              ))
+                            ) : null}
+                          </div>
                         </div>
                       )}
                     </div>
-                    <div className="p-4">
+                    
+                    <div className="px-4 py-2">
+                      <Link href={`/article/${related.slug}`}>
+                        <h3 className="text-xl font-normal text-primary mb-2">{related.title}</h3>
+                      </Link>                      
                       <div className="flex items-center mb-2">
                         <i className="fa-solid fa-user-astronaut mr-1"></i>
-                        <span className="text-xs text-text-light">{article.author?.name || '匿名'} | {article.date}</span>
+                        <span className="text-xs text-text-light">
+                          {related.authorName || article.author?.name || '匿名'} | {related.date || article.date || '未知日期'}
+                        </span>
                       </div>
-                      <Link href={`/article/${related.slug}`}>
-                        <h3 className="text-lg font-normal text-primary transition-colors">{related.title}</h3>
-                        </Link>
 
-                      <div className="border-t my-4"></div>
+                      <p className="text-text-light mb-4">{related.excerpt || related.summary}</p>
+                      <div className="border-t border-gray-200 my-2"></div>
                       <div className="flex items-center justify-between">
                         <div className="flex items-center space-x-2">
                           <EmojiReaction 
                             article={{
-                              id: related.id,
-                              reactionCount: 0,
-                              userReaction: undefined
-                            }} 
+                              id: related.id || related._id || '',
+                              reactionCount: related.likes || 0,
+                              userReaction: 'like'
+                            }}
                           />
                         </div>
                         <div className="flex items-center text-sm text-text-light space-x-4">
                           <div className="flex items-center">
                             <i className="fa-solid fa-eye mr-1"></i>
-                            <span>0</span>
+                            <span>{related.viewCount || related.views || 0}</span>
                           </div>
-                          <div>
-                            <i className="fa-solid fa-share-nodes"></i>
-                          </div>
+                          <ShareButton 
+                            url={`/article/${related.slug}`} 
+                            title={related.title}
+                            summary={related.excerpt || related.summary || ''}
+                          />
                         </div>
                       </div>
                     </div>
                   </div>
-            ))}
-          </div>
+                ))}
+              </div>
             </div>
           )}
         </div>

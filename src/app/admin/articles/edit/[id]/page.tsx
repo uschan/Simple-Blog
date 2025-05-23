@@ -1,16 +1,14 @@
 "use client";
 
 import { useState, useEffect, useCallback, useRef } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useParams } from "next/navigation";
 import Link from "next/link";
-// import FileUploader from "@/components/admin/FileUploader";
-// import SimpleEditor from "@/components/admin/SimpleEditor";
 import { pinyin } from "pinyin-pro";
 import { get, put, uploadFile } from "@/lib/api"; // 导入API工具
 import { convertToApiImageUrl } from "@/lib/utils"; // 添加导入
 import dynamic from 'next/dynamic'; // <-- 添加这行导入 dynamic
 const FileUploader = dynamic(() => import('@/components/admin/FileUploader'), { ssr: false });
-const SimpleEditor = dynamic(() => import('@/components/admin/SimpleEditor'), { ssr: false });
+const TiptapEditor = dynamic(() => import('@/components/admin/TiptapEditor'), { ssr: false });
 
 interface Article {
   _id: string;
@@ -73,14 +71,59 @@ const generateSlug = (title: string): string => {
     .replace(/(^-|-$)/g, '');
 };
 
-export default function EditArticlePage({ params }: { params: { id: string } }) {
+// 依据编辑器类型导入内容转换工具
+export const convertEditorContent = (content: any, editorType: string) => {
+  if (editorType === 'tiptap') {
+    // TipTap编辑器内容转化为EditorJS格式
+    if (content && content.json) {
+      try {
+        // 构建一个简单的EditorJS格式，作为兼容转换
+        const blocks: any[] = [];
+        
+        // 解析TipTap内容并转换为EditorJS格式
+        // 这里仅示例，实际转换逻辑可能更复杂
+        if (content.html) {
+          blocks.push({
+            type: 'paragraph',
+            data: {
+              text: content.html
+            }
+          });
+        }
+        
+        return {
+          time: new Date().getTime(),
+          blocks: blocks.length > 0 ? blocks : [{ 
+            type: 'paragraph', 
+            data: { 
+              text: content.html || '' 
+            } 
+          }]
+        };
+      } catch (error) {
+        console.error('转换TipTap内容错误:', error);
+        return { time: new Date().getTime(), blocks: [] };
+      }
+    }
+    return { time: new Date().getTime(), blocks: [] };
+  }
+  
+  // 原始EditorJS内容不需要转换
+  return content;
+};
+
+export default function EditArticlePage() {
+  // 使用useParams钩子替代直接访问params.id
+  const params = useParams();
+  const id = params?.id as string;
+  
   const router = useRouter();
   const [article, setArticle] = useState<Article | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState('');
   
-  // 使用ref存储编辑器数据，避免频繁状态更新
-  const editorDataRef = useRef<any>({});
+  // 使用ref存储编辑器内容
+  const editorContentRef = useRef<string>('');
   
   const [formData, setFormData] = useState({
     title: '',
@@ -107,11 +150,16 @@ export default function EditArticlePage({ params }: { params: { id: string } }) 
 
   // 加载文章数据
   useEffect(() => {
+    if (!id) return;
+    
     const fetchArticle = async () => {
       try {
         setIsLoading(true);
+        // console.log('开始加载文章数据，ID:', id);
+        
         // 使用API工具中的get方法代替直接fetch调用
-        const apiData = await get(`/admin/articles?id=${params.id}`);
+        const apiData = await get(`/admin/articles?id=${id}`);
+        // console.log('API返回数据:', apiData);
         
         // API工具已处理JSON解析和错误检查
         const articleData = apiData.data;
@@ -120,30 +168,33 @@ export default function EditArticlePage({ params }: { params: { id: string } }) 
           throw new Error('文章数据异常或不完整');
         }
         
-        // 尝试解析content为Editor.js数据
-        let editorData = {};
+        // 处理文章内容
+        let parsedContent = articleData.content || '';
+        
+        // 尝试解析JSON内容 (如果是EditorJS格式)
         try {
-          if (articleData.content) {
-            editorData = JSON.parse(articleData.content);
+          const jsonContent = JSON.parse(articleData.content);
+          // 如果是EditorJS格式，尝试提取纯文本内容
+          if (jsonContent && jsonContent.blocks) {
+            parsedContent = jsonContent.blocks
+              .map((block: any) => {
+                if (block.type === 'paragraph') {
+                  return block.data.text || '';
+                }
+                return '';
+              })
+              .join('\n');
           }
         } catch (e) {
-          console.warn('无法解析content为Editor.js数据，将使用空对象', e);
-          // 如果不是JSON，则创建一个包含原始内容的blocks
-          editorData = {
-            time: new Date().getTime(),
-            blocks: [
-              {
-                type: 'paragraph',
-                data: {
-                  text: articleData.content || ''
-                }
-              }
-            ]
-          };
+          // 如果不是JSON格式，直接使用原始内容
+          // console.log('内容不是JSON格式，使用原始内容');
         }
         
-        // 将编辑器数据存储在ref中
-        editorDataRef.current = editorData;
+        // console.log('文章内容加载成功:', parsedContent.substring(0, 100) + '...');
+        
+        // 存储解析后的内容
+        editorContentRef.current = parsedContent;
+        articleData.content = parsedContent;
         
         setArticle(articleData);
         setFormData({
@@ -188,7 +239,7 @@ export default function EditArticlePage({ params }: { params: { id: string } }) 
     };
     
     fetchArticle();
-  }, [params.id]);
+  }, [id]);
 
   // 处理表单更新
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
@@ -199,23 +250,27 @@ export default function EditArticlePage({ params }: { params: { id: string } }) 
     });
   };
 
-  // 富文本编辑器内容变更处理 - 只存储在ref中，不触发重渲染
+  // 富文本编辑器内容变更处理
   const handleContentChange = useCallback((data: any) => {
-    editorDataRef.current = data;
+    if (data && data.html) {
+      editorContentRef.current = data.html;
+      console.log('编辑器内容已更新');
+    }
   }, []);
 
   // 保存文章
   const handleSave = async (status: 'draft' | 'published') => {
     setSaving(true);
     try {
-      // 保存时从ref获取最新的编辑器数据
-      const currentEditorData = editorDataRef.current;
+      // 保存时使用编辑器中的HTML内容
+      const currentContent = editorContentRef.current;
+      // console.log('保存文章内容类型:', typeof currentContent);
       
       // 使用API工具中的put方法代替直接fetch调用
       const data = await put('/admin/articles', {
-        id: params.id,
+        id,
         title: formData.title,
-        content: JSON.stringify(currentEditorData),
+        content: currentContent, // 直接保存HTML内容
         summary: formData.excerpt || formData.title,
         excerpt: formData.excerpt,
         status,
@@ -261,7 +316,7 @@ export default function EditArticlePage({ params }: { params: { id: string } }) 
         <div className="bg-red-50 border border-red-200 text-red-700 px-6 py-4 rounded-lg mb-4">
           <h2 className="text-lg font-medium mb-2">加载文章时出错</h2>
           <p className="mb-2">{error}</p>
-          <p className="text-sm text-red-500">文章ID: {params.id}</p>
+          <p className="text-sm text-red-500">文章ID: {id}</p>
           <Link href="/admin/articles" className="text-red-600 hover:text-red-700 underline mt-4 inline-block">
             返回文章列表
           </Link>
@@ -324,11 +379,11 @@ export default function EditArticlePage({ params }: { params: { id: string } }) 
               </div>
 
           {/* 编辑器 */}
-          <div className="mt-4">
-            <label className="block text-sm dark:text-blue-500 font-medium mb-2">⋙⋙◟文章内容◞</label>
-            <div className="editor-container" style={{ minHeight: "400px" }}>
-              <SimpleEditor 
-                initialValue={editorDataRef.current}
+          <div className="mb-6">
+            <label className="block text-sm dark:text-blue-500 font-medium mt-4 mb-2">⋙⋙◟文章内容◞</label>
+            <div className="editor-container" style={{ minHeight: "200px" }}>
+              <TiptapEditor
+                initialValue={article?.content || ''}
                 onChange={handleContentChange}
               />
             </div>
@@ -346,121 +401,10 @@ export default function EditArticlePage({ params }: { params: { id: string } }) 
               className="w-full text-xs italic px-4 py-2 rounded-lg bg-gray-100 dark:bg-zinc-800"
             />
             </div>
-          </div>
+        </div>
           
           {/* 右侧设置区 */}
           <div className="space-y-6">
-          {/* 发布设置 */}
-          <div className="bg-gray-100 dark:bg-zinc-800 rounded-lg p-4">
-            <label className="block text-sm dark:text-blue-500 font-medium mb-2">⋙⋙◟状态◞</label>
-                    <select 
-                      name="status"
-                      value={formData.status}
-                      onChange={handleInputChange}
-              className="w-full text-xs italic px-3 py-2 rounded-lg bg-bg dark:bg-zinc-900 border border-gray-200 dark:border-0"
-                    >
-              <option value="published">发布</option>
-                      <option value="draft">草稿</option>
-                    </select>
-                
-            <div className="mt-4">
-              <label className="block text-sm dark:text-blue-500 font-medium mb-2">⋙⋙◟发布日期◞</label>
-              <div className="flex items-center space-x-2">
-                <input 
-                  type="date" 
-                  name="publishedAt"
-                  value={formData.publishedAt}
-                  onChange={handleInputChange}
-                  className="w-full text-xs italic px-3 py-2 rounded-lg bg-bg dark:bg-gray-700 border border-gray-200 dark:bg-zinc-900"
-                />
-                <button
-                  type="button"
-                  onClick={() => setFormData({ ...formData, publishedAt: new Date().toISOString().split("T")[0] })}
-                  className="px-2 py-1 text-xs bg-primary text-white rounded"
-                >今天</button>
-              </div>
-            </div>
-
-            <div className="mt-4">
-              <label className="block text-sm dark:text-blue-500 font-medium mb-2">⋙⋙◟作者◞</label>
-                <input 
-                  type="text" 
-                  name="author"
-                  value={formData.author}
-                  onChange={handleInputChange}
-                placeholder="输入作者名称"
-                className="w-full text-xs italic px-3 py-2 rounded-lg bg-bg dark:bg-zinc-900 border border-gray-200"
-                />
-            </div>
-
-            <div className="mt-4">
-              <label className="block text-sm dark:text-blue-500 font-medium mb-2">⋙⋙◟分类◞</label>
-                <select 
-                  name="categoryId"
-                  value={formData.categoryId}
-                  onChange={handleInputChange}
-                className="w-full text-xs italic px-3 py-2 rounded-lg bg-bg dark:bg-zinc-900 border border-gray-200"
-                >
-                  <option value="">选择分类</option>
-                {formData.categories.map((cat) => (
-                  <option key={cat._id} value={cat._id}>
-                    {cat.name}
-                  </option>
-                  ))}
-                </select>
-            </div>
-                
-            <div className="mt-4">
-              <label className="block text-sm dark:text-blue-500 font-medium mb-2">⋙⋙◟标签◞</label>
-                <div className="flex flex-wrap gap-2 mb-2">
-                {formData.tags.map((tag, idx) => (
-                  <span key={idx} className="bg-primary text-white px-2 py-1 rounded-full text-xs flex items-center">
-                      {tag}
-                      <button 
-                      onClick={() => setFormData({ ...formData, tags: formData.tags.filter((_, i) => i !== idx) })}
-                        className="ml-1"
-                    >×</button>
-                    </span>
-                  ))}
-                </div>
-                <input 
-                  type="text" 
-                  value={newTag}
-                  onChange={(e) => setNewTag(e.target.value)}
-                  onKeyDown={(e) => {
-                    if (e.key === ' ' && newTag.trim()) {
-                    setFormData({ ...formData, tags: [...formData.tags, newTag.trim()] });
-                      setNewTag('');
-                      e.preventDefault();
-                    }
-                  }}
-                  placeholder="添加新标签..." 
-                className="w-full text-xs italic px-3 py-2 rounded-lg bg-bg dark:bg-zinc-900 border border-gray-200"
-                />
-            </div>
-                
-            <div className="mt-4 flex flex-wrap gap-3">
-                <label className="inline-flex items-center">
-                  <input 
-                    type="checkbox" 
-                    checked={formData.isFeatured}
-                  onChange={(e) => setFormData({ ...formData, isFeatured: e.target.checked })}
-                    className="rounded-full text-primary"
-                  />
-                <span className="text-sm ml-2">特色文章</span>
-                </label>
-              <label className="inline-flex items-center ml-4">
-                  <input 
-                    type="checkbox" 
-                    checked={formData.isSlider}
-                  onChange={(e) => setFormData({ ...formData, isSlider: e.target.checked })}
-                    className="rounded-full text-primary"
-                  />
-                <span className="text-sm ml-2">通栏轮播</span>
-                </label>
-                    </div>
-                  </div>
-                
           {/* 媒体上传 */}
           <div className="border-2 border-dotted border-gray-300 dark:border-zinc-900 bg-gray-100 dark:bg-zinc-800 rounded-lg p-4 text-center">
             {/* 类型切换 */}
@@ -491,7 +435,120 @@ export default function EditArticlePage({ params }: { params: { id: string } }) 
               onUploadError={err=>alert(err.message)}
               // FileUploader组件内部应已通过API工具实现认证上传
             /></div>}
-        </div>
+          </div>
+
+          <div className="bg-gray-100 dark:bg-zinc-800 rounded-lg p-4">
+            {/* 分类 */}
+              <label className="block text-sm dark:text-blue-500 font-medium mb-2">⋙⋙◟分类◞</label>
+                <select 
+                  name="categoryId"
+                  value={formData.categoryId}
+                  onChange={handleInputChange}
+                className="w-full text-xs italic px-3 py-2 rounded-lg bg-bg dark:bg-zinc-900 border border-gray-200"
+                >
+                  <option value="">选择分类</option>
+                {formData.categories.map((cat) => (
+                  <option key={cat._id} value={cat._id}>
+                    {cat.name}
+                  </option>
+                  ))}
+                </select>
+
+            {/* 标签 */}
+            <div className="mt-4">
+              <label className="block text-sm dark:text-blue-500 font-medium mb-2">⋙⋙◟标签◞</label>
+                <div className="flex flex-wrap gap-2 mb-2">
+                {formData.tags.map((tag, idx) => (
+                  <span key={idx} className="bg-primary text-white px-2 py-1 rounded-full text-xs flex items-center">
+                      {tag}
+                      <button 
+                      onClick={() => setFormData({ ...formData, tags: formData.tags.filter((_, i) => i !== idx) })}
+                        className="ml-1"
+                    >×</button>
+                    </span>
+                  ))}
+                </div>
+                <input 
+                  type="text" 
+                  value={newTag}
+                  onChange={(e) => setNewTag(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === ' ' && newTag.trim()) {
+                    setFormData({ ...formData, tags: [...formData.tags, newTag.trim()] });
+                      setNewTag('');
+                      e.preventDefault();
+                    }
+                  }}
+                  placeholder="添加新标签..." 
+                className="w-full text-xs italic px-3 py-2 rounded-lg bg-bg dark:bg-zinc-900 border border-gray-200"
+                />
+            </div>
+
+            {/* 特色文章 */}
+            <div className="mt-4 flex flex-wrap gap-3">
+                <label className="inline-flex items-center">
+                  <input 
+                    type="checkbox" 
+                    checked={formData.isFeatured}
+                  onChange={(e) => setFormData({ ...formData, isFeatured: e.target.checked })}
+                    className="rounded-full text-primary"
+                  />
+                  <span className="text-sm ml-2">特色文章</span>
+                </label>
+                <label className="inline-flex items-center ml-4">
+                  <input 
+                    type="checkbox" 
+                    checked={formData.isSlider}
+                  onChange={(e) => setFormData({ ...formData, isSlider: e.target.checked })}
+                    className="rounded-full text-primary"
+                  />
+                  <span className="text-sm ml-2">通栏轮播</span>
+                </label>
+            </div>
+          </div>
+          <div className="bg-gray-100 dark:bg-zinc-800 rounded-lg p-4">
+            {/* 状态 */}             
+            <label className="block text-sm dark:text-blue-500 font-medium mb-2">⋙⋙◟状态◞</label>
+                    <select 
+                      name="status"
+                      value={formData.status}
+                      onChange={handleInputChange}
+              className="w-full text-xs italic px-3 py-2 rounded-lg bg-bg dark:bg-zinc-900 border border-gray-200 dark:border-0"
+                    >
+                      <option value="published">发布</option>
+                      <option value="draft">草稿</option>
+                    </select>
+            {/* 作者 */}
+            <div className="mt-4">
+              <label className="block text-sm dark:text-blue-500 font-medium mb-2">⋙⋙◟作者◞</label>
+                <input 
+                  type="text" 
+                  name="author"
+                  value={formData.author}
+                  onChange={handleInputChange}
+                placeholder="输入作者名称"
+                className="w-full text-xs italic px-3 py-2 rounded-lg bg-bg dark:bg-zinc-900 border border-gray-200"
+                />
+            </div>
+            {/* 发布日期 */} 
+            <div className="mt-4">
+              <label className="block text-sm dark:text-blue-500 font-medium mb-2">⋙⋙◟发布日期◞</label>
+              <div className="flex items-center space-x-2">
+                <input 
+                  type="date" 
+                  name="publishedAt"
+                  value={formData.publishedAt}
+                  onChange={handleInputChange}
+                  className="w-full text-xs italic px-3 py-2 rounded-lg bg-bg dark:bg-gray-700 border border-gray-200 dark:bg-zinc-900"
+                />
+                <button
+                  type="button"
+                  onClick={() => setFormData({ ...formData, publishedAt: new Date().toISOString().split("T")[0] })}
+                  className="px-2 py-1 text-xs bg-primary text-white rounded"
+                >今天</button>
+              </div>
+            </div>
+          </div>
         
           {/* 底部按钮 */}
           <div className="flex justify-end space-x-4 pb-6">

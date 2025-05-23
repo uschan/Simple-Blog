@@ -56,11 +56,13 @@ interface TransformedArticle {
 // 获取单篇文章详情
 export async function GET(
   request: NextRequest,
-  { params }: { params: { slug: string } }
+  context: { params: { slug: string } }
 ) {
   try {
     await connectDB();
     
+    // 获取slug参数 - 先await context.params再使用slug属性
+    const params = await context.params;
     const { slug } = params;
     
     if (!slug) {
@@ -95,7 +97,9 @@ export async function GET(
         _id: { $ne: article._id },
         status: 'published'
       })
-      .select('title slug coverImage coverType _id')
+      // 选择更多字段，包括多媒体和浏览量
+      .select('title slug coverImage coverType coverGallery coverVideo galleryImages videoUrl views likes authorName publishedAt createdAt _id summary excerpt')
+      .populate('categories', 'name slug _id')
       .limit(3)
       .sort({ publishedAt: -1, createdAt: -1 })
       .lean();
@@ -135,9 +139,29 @@ export async function GET(
       tags: article.tags || [],
       relatedArticles: relatedArticles.map((related: any) => ({
         id: related._id.toString(),
+        _id: related._id.toString(),
         title: related.title,
         slug: related.slug,
-        coverImage: related.coverImage || '/images/avatar.png'
+        coverImage: related.coverImage || '/images/avatar.png',
+        coverType: related.coverType || 'image',
+        coverGallery: related.coverGallery || [],
+        coverVideo: related.coverVideo || '',
+        galleryImages: related.galleryImages || [],
+        videoUrl: related.videoUrl || '',
+        views: related.views || 0,
+        viewCount: related.views || 0,
+        likes: related.likes || 0,
+        authorName: related.authorName || '匿名',
+        date: related.publishedAt ? new Date(related.publishedAt).toISOString().split('T')[0] : 
+              new Date(related.createdAt).toISOString().split('T')[0],
+        excerpt: related.excerpt || related.summary || '',
+        summary: related.summary || related.excerpt || '',
+        categories: related.categories ? 
+          related.categories.map((cat: any) => ({
+            _id: cat._id?.toString() || cat.id || 'default-id',
+            name: cat.name || '未分类',
+            slug: cat.slug || 'uncategorized'
+          })) : []
       }))
     };
     

@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { useState, useEffect, useRef } from 'react';
 import OptimizedImage from './OptimizedImage';
 import { get } from '@/lib/api'; // 导入get函数获取设置
+import { convertToApiImageUrl } from '@/lib/utils'; // 导入URL转换工具
 
 // 分类接口定义
 interface Category {
@@ -102,7 +103,8 @@ export default function Navbar({ categories = [] }: { categories: Category[] }) 
   const [isScrolled, setIsScrolled] = useState(false);
   // 不再需要获取分类，直接使用传入的分类
   const [isLoading, setIsLoading] = useState(false);
-  const [siteLogo, setSiteLogo] = useState('/images/avatar.png'); // 默认logo
+  // 使用相对路径，确保格式一致
+  const [siteLogo, setSiteLogo] = useState('/api/images?path=images%2Favatar.png');
   const overlayRef = useRef<HTMLDivElement>(null);
   const menuRef = useRef<HTMLDivElement>(null);
   
@@ -177,7 +179,11 @@ export default function Navbar({ categories = [] }: { categories: Category[] }) 
         try {
           const response = await get('/api/settings');
           if (response.success && response.data && response.data.logo) {
-            setSiteLogo(response.data.logo);
+            // 确保logo路径格式统一，直接使用convertToApiImageUrl处理
+            const logoUrl = convertToApiImageUrl(response.data.logo);
+            if (logoUrl) {
+              setSiteLogo(logoUrl);
+            }
           }
         } catch (error) {
           console.error('获取网站Logo失败:', error);

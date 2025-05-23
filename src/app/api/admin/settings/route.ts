@@ -21,24 +21,24 @@ export async function GET(request: NextRequest) {
     // 如果没有设置项，初始化默认设置
     if (settings.length === 0) {
       const defaultSettings = {
-        [STANDARD_FIELD_NAMES.SITE_NAME]: '野盐',
+        [STANDARD_FIELD_NAMES.SITE_NAME]: '野盐博客',
         [STANDARD_FIELD_NAMES.SITE_DESCRIPTION]: '野盐是一个专注于独特设计和艺术创作的平台，分享原创插画、艺术和设计资讯。',
         [STANDARD_FIELD_NAMES.SITE_KEYWORDS]: '博客,技术,分享,设计,艺术',
         [STANDARD_FIELD_NAMES.LOGO]: '/images/logo.svg',
         [STANDARD_FIELD_NAMES.FAVICON]: '/images/favicon.ico',
-        [STANDARD_FIELD_NAMES.COPYRIGHT]: '© 2023-2025 野盐. 保留所有权利。',
+        [STANDARD_FIELD_NAMES.COPYRIGHT]: '© 2025 野盐.WILDSALT.ME 保留所有权利。',
         [STANDARD_FIELD_NAMES.SOCIALS]: JSON.stringify([
-          { name: 'Twitter', url: 'https://twitter.com/username', icon: 'fa-twitter' },
-          { name: 'Instagram', url: 'https://instagram.com/username', icon: 'fa-instagram' }
+          { name: 'Twitter', url: 'https://x.com/uschan', icon: 'fa-twitter' },
+          { name: 'Instagram', url: 'https://instagram.com/bujjun', icon: 'fa-instagram' }
         ]),
         [STANDARD_FIELD_NAMES.ANALYTICS_TYPE]: 'google',
         [STANDARD_FIELD_NAMES.ANALYTICS_CODE]: `<!-- Google tag (gtag.js) -->
-<script async src="https://www.googletagmanager.com/gtag/js?id=G-XXXXXXXX"></script>
+<script async src="https://www.googletagmanager.com/gtag/js?id=GTM-N5XXDXFQ"></script>
 <script>
   window.dataLayer = window.dataLayer || [];
   function gtag(){dataLayer.push(arguments);}
   gtag('js', new Date());
-  gtag('config', 'G-XXXXXXXX');
+  gtag('config', 'GTM-N5XXDXFQ');
 </script>`
       };
       

@@ -206,7 +206,7 @@ export default function EmojiReaction({ article, className = '' }: EmojiReaction
               }
               
               success = true;
-              console.log('反应已保存:', data);
+              // console.log('反应已保存:', data);
             } else {
               console.error('服务器返回错误:', data.error);
             }
@@ -215,7 +215,7 @@ export default function EmojiReaction({ article, className = '' }: EmojiReaction
             console.error('保存反应失败', errorData);
             retryCount++;
             if (retryCount <= maxRetries) {
-              console.log(`正在重试(${retryCount}/${maxRetries})...`);
+              // console.log(`正在重试(${retryCount}/${maxRetries})...`);
               await new Promise(resolve => setTimeout(resolve, 1000)); // 等待1秒后重试
             }
           }
@@ -223,7 +223,7 @@ export default function EmojiReaction({ article, className = '' }: EmojiReaction
           console.error('提交反应时网络错误:', error);
           retryCount++;
           if (retryCount <= maxRetries) {
-            console.log(`正在重试(${retryCount}/${maxRetries})...`);
+            // console.log(`正在重试(${retryCount}/${maxRetries})...`);
             await new Promise(resolve => setTimeout(resolve, 1000)); // 等待1秒后重试
           }
         }

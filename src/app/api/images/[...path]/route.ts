@@ -12,7 +12,7 @@ import { existsSync } from 'fs';
  */
 export async function GET(
   req: NextRequest,
-  { params }: { params: { path: string[] } }
+  context: { params: { path: string[] } }
 ) {
   try {
     let imagePath: string;
@@ -24,7 +24,7 @@ export async function GET(
       imagePath = queryPath;
     } else {
       // 否则使用路径参数
-      imagePath = params.path.join('/');
+      imagePath = context.params.path.join('/');
     }
 
     // 确保路径不包含任何尝试跳出公共目录的部分

@@ -222,7 +222,7 @@ export default function ArticlesPage() {
                         key={article._id} 
                         className="hover:bg-gray-50 dark:hover:bg-zinc-800"
                       >
-                        <td className="px-6 py-4">
+                        <td className="px-4 py-2">
                           <div className="flex items-center">
                             <div>
                               <div className="font-medium text-gray-900 dark:text-white">

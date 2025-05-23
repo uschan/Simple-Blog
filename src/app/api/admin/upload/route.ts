@@ -74,13 +74,27 @@ async function processFileUpload(file: File, type: string, userId: string) {
     throw new Error('文件大小超过限制(20MB)');
   }
   
-  // 根据上传类型确定目标目录和文件名
-  let targetDir = 'uploads';
+  // 根据上传类型确定目标目录
+  let baseDir = 'uploads';
   if (type === 'logo' || type === 'favicon') {
-    targetDir = 'images';
+    baseDir = 'images';
   } else if (type === 'category') {
     // 分类图片存放在categories目录下
-    targetDir = 'uploads/categories';
+    baseDir = 'uploads';
+  }
+  
+  // 按照年/月日目录结构存放文件
+  const now = new Date();
+  const year = now.getFullYear();
+  // 月和日使用两位数格式
+  const month = String(now.getMonth() + 1).padStart(2, '0');
+  const day = String(now.getDate()).padStart(2, '0');
+  
+  // 构建目标目录
+  let targetDir = baseDir;
+  // 只有uploads目录使用年/月日结构
+  if (baseDir.startsWith('uploads')) {
+    targetDir = `${baseDir}/${year}/${month}-${day}`;
   }
   
   // 生成安全的文件名

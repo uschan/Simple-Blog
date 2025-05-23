@@ -32,20 +32,20 @@ async function connectDB() {
 
   if (!cached.promise) {
     mongoose.set('strictQuery', true);
-    console.log('正在连接MongoDB...');
+    // console.log('正在连接MongoDB...');
     
     // 尝试先不带认证连接
     try {
       cached.promise = mongoose.connect(MONGODB_URI, options)
         .then((mongoose) => {
-          console.log('MongoDB连接成功');
+          // console.log('MongoDB连接成功');
           return mongoose;
         })
         .catch((err) => {
           console.error('MongoDB连接失败，尝试不带认证连接:', err);
           // 尝试不带认证连接
           return mongoose.connect('mongodb://localhost:27017/blog', options).then((mongoose) => {
-            console.log('MongoDB无认证连接成功');
+            // console.log('MongoDB无认证连接成功');
             return mongoose;
           });
         });

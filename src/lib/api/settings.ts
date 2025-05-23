@@ -106,7 +106,8 @@ export const getSettings = cache(async (): Promise<SiteSettings> => {
             }
         };
 
-        console.log('从数据库获取设置成功并已处理'); // 添加一个日志，确认这段代码被执行
+        // console.log('从数据库获取设置成功并已处理'); 
+        // 添加一个日志，确认这段代码被执行
 
         return publicSettings;
 

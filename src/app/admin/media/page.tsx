@@ -28,37 +28,32 @@ interface Pagination {
 }
 
 export default function MediaPage() {
-  const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [showUploadModal, setShowUploadModal] = useState(false);
-  const [showInfoModal, setShowInfoModal] = useState(false);
-  const [selectedFile, setSelectedFile] = useState<MediaItem | null>(null);
   const [isUploading, setIsUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   
-  // 分页和筛选状态
+  // 媒体数据和分页
   const [mediaItems, setMediaItems] = useState<MediaItem[]>([]);
   const [pagination, setPagination] = useState<Pagination>({
     page: 1,
-    limit: 20,
+    limit: 50, // 增大一页显示的数量
     total: 0,
     totalPages: 0
   });
-  const [searchTerm, setSearchTerm] = useState('');
-  const [fileType, setFileType] = useState<string>('');
   
-  // 获取媒体文件
-  const fetchMedia = useCallback(async (page = 1, limit = 20, search = '', type = '') => {
+  // 批量选择功能
+  const [selectedItems, setSelectedItems] = useState<string[]>([]);
+  const [isDeleting, setIsDeleting] = useState(false);
+  
+  // 获取媒体文件 - 简化版
+  const fetchMedia = useCallback(async (page = 1, limit = 50) => {
     setIsLoading(true);
     setError(null);
     
     try {
-      let url = `/api/admin/media?page=${page}&limit=${limit}`;
-      if (search) url += `&search=${encodeURIComponent(search)}`;
-      if (type) url += `&type=${encodeURIComponent(type)}`;
-      
-      const data = await get(url);
+      const data = await get(`/api/admin/media?page=${page}&limit=${limit}`);
       
       if (data.success) {
         setMediaItems(data.data);
@@ -74,29 +69,23 @@ export default function MediaPage() {
     }
   }, []);
   
-  // 初始加载和筛选变化时获取数据
+  // 初始加载
   useEffect(() => {
-    fetchMedia(pagination.page, pagination.limit, searchTerm, fileType);
-  }, [fetchMedia, pagination.page, pagination.limit, searchTerm, fileType]);
+    fetchMedia(pagination.page, pagination.limit);
+  }, [fetchMedia, pagination.page, pagination.limit]);
   
-  // 关闭所有模态框
-  const closeAllModals = () => {
-    setShowUploadModal(false);
-    setShowInfoModal(false);
-    setSelectedFile(null);
-  };
-  
-  // 打开文件信息模态框
-  const openFileInfo = (file: MediaItem) => {
-    setSelectedFile({...file});
-    setShowInfoModal(true);
-  };
-  
-  // 删除文件
-  const deleteFile = async (fileId: string) => {
-    if (confirm('确定要删除这个文件吗？')) {
+  // 删除文件 - 使用安全更新顺序
+  const deleteFile = useCallback(async (fileId: string, e?: React.MouseEvent) => {
+    // 防止事件冒泡
+    if (e) {
+      e.stopPropagation();
+    }
+    
+    if (!confirm('确定要删除这个文件吗？')) {
+      return;
+    }
+    
       try {
-        // 使用适当的请求方式删除文件
         const data = await del('/api/admin/media', {
           headers: {
             'Content-Type': 'application/json'
@@ -105,13 +94,14 @@ export default function MediaPage() {
         });
         
         if (data.success) {
-          // 更新UI，删除对应文件
-          setMediaItems(mediaItems.filter(item => item.id !== fileId));
-          
-          // 如果当前查看的文件被删除，关闭信息模态框
-          if (selectedFile && selectedFile.id === fileId) {
-            closeAllModals();
-          }
+        // 安全地按顺序更新状态
+        // 1. 先从选择列表中移除
+        setSelectedItems(prev => prev.filter(id => id !== fileId));
+        
+        // 2. 延迟一帧后更新媒体列表，确保DOM更新有序进行
+        requestAnimationFrame(() => {
+          setMediaItems(prev => prev.filter(item => item.id !== fileId));
+        });
         } else {
           alert(data.message || '删除文件失败');
         }
@@ -119,8 +109,74 @@ export default function MediaPage() {
         console.error('删除文件失败:', error);
         alert('删除文件失败，请稍后重试');
       }
+  }, []);
+  
+  // 简化全选/取消全选逻辑
+  const toggleSelectAll = useCallback((e?: React.MouseEvent) => {
+    // 阻止事件冒泡
+    if (e) {
+      e.stopPropagation();
     }
-  };
+    
+    // 使用函数式更新
+    setSelectedItems(prev => 
+      prev.length === mediaItems.length ? [] : mediaItems.map(item => item.id)
+    );
+  }, [mediaItems]);
+
+  // 简化单个选择逻辑
+  const toggleSelectItem = useCallback((id: string, event?: React.MouseEvent) => {
+    // 如果有事件，阻止事件冒泡，防止父元素的点击事件被触发
+    if (event) {
+      event.stopPropagation();
+    }
+    
+    // 使用函数式更新来确保状态更新的一致性
+    setSelectedItems(prev => 
+      prev.includes(id) ? prev.filter(itemId => itemId !== id) : [...prev, id]
+    );
+  }, []);
+  
+  // 批量删除处理函数 - 增加防御性检查
+  const handleBulkDelete = useCallback(async (e?: React.MouseEvent) => {
+    // 阻止事件冒泡
+    if (e) {
+      e.stopPropagation();
+    }
+    
+    if (selectedItems.length === 0) return;
+    
+    if (!confirm(`确定要删除选中的 ${selectedItems.length} 个文件吗？此操作不可撤销。`)) {
+      return;
+    }
+    
+    // 先设置删除中状态
+    setIsDeleting(true);
+    
+    try {
+      const data = await del('/api/admin/media/bulk', {
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ ids: selectedItems })
+      });
+      
+      if (data.success) {
+        // 先清空选择
+        setSelectedItems([]);
+        
+        // 再更新媒体列表
+        setMediaItems(prev => prev.filter(item => !selectedItems.includes(item.id)));
+      } else {
+        alert(data.message || '批量删除文件失败');
+      }
+    } catch (error) {
+      console.error('批量删除文件失败:', error);
+      alert('批量删除文件失败，请稍后重试');
+    } finally {
+      setIsDeleting(false);
+    }
+  }, [selectedItems]);
   
   // 处理上传文件
   const uploadFiles = async (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -132,7 +188,6 @@ export default function MediaPage() {
     
     try {
       const uploadedItems: MediaItem[] = [];
-      const failedUploads: { name: string; reason: string }[] = [];
       const total = files.length;
       
       // 针对多文件上传逐个处理
@@ -144,10 +199,9 @@ export default function MediaPage() {
         formData.append('file', file);
         formData.append('type', 'media'); // 指定为媒体库上传
         
-        // 更新进度 - 为每个文件分配进度空间
-        setUploadProgress(Math.round((i / total) * 90)); // 预留10%用于完成处理
+        // 更新进度
+        setUploadProgress(Math.round((i / total) * 90)); 
         
-        // 使用API工具上传文件
         try {
           const data = await uploadFile('/api/admin/upload', formData);
           
@@ -156,13 +210,6 @@ export default function MediaPage() {
           }
         } catch (error) {
           console.error(`文件 ${file.name} 上传失败:`, error);
-          
-          // 添加到失败列表
-          failedUploads.push({
-            name: file.name,
-            reason: error instanceof Error ? error.message : '未知错误'
-          });
-          
           continue; // 继续处理下一个文件
         }
       }
@@ -180,7 +227,7 @@ export default function MediaPage() {
           setUploadProgress(0);
           setShowUploadModal(false);
           // 重新获取媒体列表以确保最新数据
-          fetchMedia(pagination.page, pagination.limit, searchTerm, fileType);
+          fetchMedia(pagination.page, pagination.limit);
         }, 500);
       } else {
         // 如果没有文件上传成功
@@ -202,84 +249,123 @@ export default function MediaPage() {
     setPagination({ ...pagination, page: newPage });
   };
   
-  // 处理搜索提交
-  const handleSearch = (e: React.FormEvent) => {
-    e.preventDefault();
-    fetchMedia(1, pagination.limit, searchTerm, fileType);
-  };
-  
-  // 监听ESC键关闭模态框
-  const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === 'Escape') {
-      closeAllModals();
+  // 媒体项组件 - 单独提取以避免重复渲染和事件冒泡问题
+  const MediaItem = useCallback(({ item }: { item: MediaItem }) => {
+    const isSelected = selectedItems.includes(item.id);
+    
+    // 处理整个项目的点击
+    const handleItemClick = (e: React.MouseEvent) => {
+      // 阻止事件冒泡
+      e.stopPropagation();
+      toggleSelectItem(item.id);
+    };
+    
+    return (
+      <div 
+        key={item.id} 
+        className={`media-card relative ${isSelected ? 'ring-4 ring-primary ring-opacity-70' : ''}`}
+        onClick={handleItemClick}
+      >
+        {/* 选择指示器 */}
+        <div className={`absolute top-2 left-2 z-20 w-6 h-6 rounded-full flex items-center justify-center
+          ${isSelected 
+            ? 'bg-primary text-white' 
+            : 'bg-white bg-opacity-70 border border-gray-300'}`}
+        >
+          {isSelected && <i className="fas fa-check text-xs"></i>}
+        </div>
+        
+        {/* 媒体内容 */}
+        <Image 
+          src={convertToApiImageUrl(item.type === 'video' ? (item.thumbnailUrl || '/images/video-placeholder.svg') : item.url)} 
+          alt={item.name} 
+          width={180} 
+          height={180} 
+          className="object-cover w-full h-full" 
+        />
+        <div className="media-overlay">
+          <div className="text-white">
+            <div className="font-medium text-sm truncate">{item.name}</div>
+            <div className="text-xs opacity-75">{item.size} · {item.date}</div>
+            {item.type === 'video' && (
+              <div className="text-xs bg-primary-dark px-2 py-0.5 rounded-full inline-block mt-1">
+                <i className="fas fa-video mr-1"></i>视频
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+    );
+  }, [selectedItems, toggleSelectItem]);
+
+  // 打开上传模态框
+  const openUploadModal = useCallback((e?: React.MouseEvent) => {
+    // 防止事件冒泡
+    if (e) {
+      e.stopPropagation();
     }
-  };
+    setShowUploadModal(true);
+  }, []);
+  
+  // 关闭上传模态框
+  const closeUploadModal = useCallback((e?: React.MouseEvent) => {
+    // 防止事件冒泡
+    if (e) {
+      e.stopPropagation();
+    }
+    if (!isUploading) {
+      setShowUploadModal(false);
+    }
+  }, [isUploading]);
+  
+  // 上传卡片组件
+  const UploadCard = useCallback(() => (
+    <div 
+      onClick={openUploadModal} 
+      className="media-card border-dashed flex flex-col items-center justify-center cursor-pointer"
+    >
+      <div className="text-5xl text-gray-300 mb-2">
+        <i className="fas fa-plus"></i>
+      </div>
+      <div className="text-sm text-text-light">上传媒体</div>
+    </div>
+  ), [openUploadModal]);
   
   return (
-    <div onKeyDown={handleKeyDown} tabIndex={-1}>
-      {/* 页面标题 */}
-      <h1 className="text-xl font-semibold underline underline-offset-8 decoration-wavy mb-4 pb-2">/// 媒体素材库 ///</h1>
+    <div className="container mx-auto max-w-6xl">
+      {/* 页面标题和操作栏 */}
+      <div className="flex justify-between items-center mb-4">
+        <h1 className="text-xl font-semibold underline underline-offset-8 decoration-wavy">/// 媒体素材库 ///</h1>
       
-      {/* 操作栏 */}
-      <div className="flex flex-wrap justify-between items-center mb-4 gap-4">
-        <div className="text-sm text-text-light">
-          共 {pagination.total} 个媒体文件
-        </div>
-        
-        {/* 搜索和过滤 */}
-        <div className="flex flex-1 max-w-md">
-          <form onSubmit={handleSearch} className="flex w-full">
-            <input 
-              type="text" 
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              placeholder="搜索文件名..." 
-              className="flex-1 px-4 py-2 rounded-l-lg bg-bg-card border border-primary-light focus:outline-none focus:ring-2 focus:ring-primary"
-            />
-            <select
-              value={fileType}
-              onChange={(e) => setFileType(e.target.value)}
-              className="px-2 py-2 bg-bg-card border-y border-primary-light focus:outline-none"
-            >
-              <option value="">所有类型</option>
-              <option value="image">图片</option>
-              <option value="video">视频</option>
-              <option value="document">文档</option>
-            </select>
-            <button 
-              type="submit" 
-              className="px-4 py-2 bg-primary text-white rounded-r-lg hover:bg-primary-dark transition-colors"
-            >
-              <i className="fas fa-search"></i>
-            </button>
-          </form>
-        </div>
-        
-        <div className="flex space-x-2">
-          {/* 视图切换 */}
-          <div className="flex rounded-lg border border-gray-200 dark:border-gray-600 overflow-hidden">
-            <button 
-              onClick={() => setViewMode('grid')} 
-              className={`p-2 ${viewMode === 'grid' ? 'bg-primary text-white' : ''}`}
-            >
-              <i className="fas fa-th-large"></i>
-            </button>
-            <button 
-              onClick={() => setViewMode('list')} 
-              className={`p-2 ${viewMode === 'list' ? 'bg-primary text-white' : ''}`}
-            >
-              <i className="fas fa-list"></i>
-            </button>
-          </div>
+        <div className="flex items-center gap-4">
+          <span className="text-sm text-text-light">共 {pagination.total} 个文件</span>
           
-          {/* 上传按钮 */}
-          <button 
-            onClick={() => setShowUploadModal(true)} 
-            className="bg-primary text-white px-4 py-2 rounded-lg hover:bg-primary-dark transition-colors inline-flex items-center"
-          >
-            <i className="fa-solid fa-upload mr-2"></i>
-            <span>上传</span>
-          </button>
+          {mediaItems.length > 0 && (
+            <div className="flex items-center space-x-2">
+              <button 
+                onClick={toggleSelectAll}
+                className="flex items-center px-3 py-1 border border-gray-300 rounded-md text-sm"
+              >
+                <i className={`fas ${selectedItems.length === mediaItems.length ? 'fa-square-check text-primary' : 'fa-square'} mr-1`}></i>
+                {selectedItems.length === mediaItems.length ? '取消全选' : '全选'}
+              </button>
+              
+              {selectedItems.length > 0 && (
+                <button 
+                  onClick={handleBulkDelete}
+                  disabled={isDeleting}
+                  className="flex items-center px-3 py-1 border border-red-300 rounded-md text-sm text-red-500"
+                >
+                  {isDeleting ? (
+                    <><i className="fas fa-spinner fa-spin mr-1"></i> 删除中</>
+                  ) : (
+                    <><i className="fas fa-trash-can mr-1"></i> 删除选中({selectedItems.length})</>
+                  )}
+                </button>
+              )}
+            </div>
+          )}
+
         </div>
       </div>
       
@@ -300,176 +386,37 @@ export default function MediaPage() {
       
       {/* 无数据状态 */}
       {!isLoading && !error && mediaItems.length === 0 && (
-        <div className="bg-bg-card rounded-lg p-8 text-center border-2 border-dashed border-gray-300 dark:border-gray-600">
-          <div className="text-5xl text-gray-300 dark:text-gray-600 mb-4">
+        <div className="bg-bg-card rounded-lg p-8 text-center border-2 border-dashed">
+          <div className="text-5xl text-gray-300 mb-4">
             <i className="fas fa-photo-film"></i>
           </div>
           <p className="text-text-light mb-4">媒体库中还没有文件</p>
           <button 
             onClick={() => setShowUploadModal(true)} 
-            className="px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary-dark transition-colors"
+            className="px-4 py-2 bg-primary text-white rounded-lg"
           >
             上传第一个文件
           </button>
         </div>
       )}
       
-      {/* 网格视图 */}
-      {!isLoading && !error && mediaItems.length > 0 && viewMode === 'grid' && (
+      {/* 网格视图 - 唯一保留的视图 */}
+      {!isLoading && !error && mediaItems.length > 0 && (
         <div className="media-grid">
-          {mediaItems.map((item) => (
-            <div key={item.id} className="media-card">
-              <Image 
-                src={convertToApiImageUrl(item.type === 'video' ? (item.thumbnailUrl || '/images/video-placeholder.svg') : item.url)} 
-                alt={item.name} 
-                width={180} 
-                height={180} 
-                className="object-cover w-full h-full" 
-              />
-              <div className="media-overlay">
-                <div className="text-white">
-                  <div className="font-medium text-sm truncate">{item.name}</div>
-                  <div className="text-xs opacity-75">{item.size} · {item.date}</div>
-                  {item.type === 'video' && (
-                    <div className="text-xs bg-primary-dark px-2 py-0.5 rounded-full inline-block mt-1">
-                      <i className="fas fa-video mr-1"></i>视频
-                    </div>
-                  )}
-                </div>
-              </div>
-              <div className="media-actions">
-                <button 
-                  onClick={() => openFileInfo(item)} 
-                  className="w-8 h-8 rounded-full bg-white bg-opacity-80 text-gray-800 flex items-center justify-center hover:bg-opacity-100"
-                >
-                  <i className="fas fa-info"></i>
-                </button>
-                <button 
-                  onClick={() => deleteFile(item.id)} 
-                  className="w-8 h-8 rounded-full bg-white bg-opacity-80 text-red-500 flex items-center justify-center hover:bg-opacity-100"
-                >
-                  <i className="fas fa-trash"></i>
-                </button>
-              </div>
-            </div>
+          {/* 使用 MediaItem 组件渲染每个媒体项 */}
+          {mediaItems.map(item => (
+            <MediaItem key={item.id} item={item} />
           ))}
           
           {/* 上传卡片 */}
-          <div 
-            onClick={() => setShowUploadModal(true)} 
-            className="media-card border-dashed flex flex-col items-center justify-center cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800"
-          >
-            <div className="text-5xl text-gray-300 dark:text-gray-600 mb-2">
-              <i className="fas fa-plus"></i>
-            </div>
-            <div className="text-sm text-text-light">上传媒体</div>
-          </div>
+          <UploadCard />
         </div>
       )}
       
-      {/* 列表视图 */}
-      {!isLoading && !error && mediaItems.length > 0 && viewMode === 'list' && (
-        <div className="bg-bg-card rounded-lg shadow-sm overflow-hidden">
-          <table className="min-w-full">
-            <thead className="bg-gray-50 dark:bg-gray-800">
-              <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-text-light uppercase tracking-wider w-12">
-                  预览
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-text-light uppercase tracking-wider">
-                  文件名
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-text-light uppercase tracking-wider">
-                  日期
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-text-light uppercase tracking-wider">
-                  大小
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-text-light uppercase tracking-wider">
-                  操作
-                </th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-gray-200 dark:divide-gray-700 bg-bg-card">
-              {mediaItems.map((item) => (
-                <tr key={item.id} className="hover:bg-gray-50 dark:hover:bg-gray-800">
-                  <td className="px-6 py-4">
-                    <div className="w-8 h-8 rounded bg-gray-200 dark:bg-gray-700 overflow-hidden">
-                      <Image 
-                        src={convertToApiImageUrl(item.type === 'video' ? (item.thumbnailUrl || '/images/video-placeholder.svg') : item.url)} 
-                        alt={item.name} 
-                        width={32} 
-                        height={32} 
-                        className="w-full h-full object-cover" 
-                      />
-                    </div>
-                  </td>
-                  <td className="px-6 py-4">
-                    <div className="flex items-center">
-                      <div>
-                        <div className="font-medium">{item.name}</div>
-                        <div className="text-text-light text-xs mt-1">
-                          {item.type === 'video' ? (
-                            <span className="text-xs text-primary-dark">
-                              <i className="fas fa-video mr-1"></i>视频 - {item.width} × {item.height} px
-                            </span>
-                          ) : (
-                            `${item.width} × ${item.height} px`
-                          )}
-                        </div>
-                      </div>
-                    </div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">{item.date}</td>
-                  <td className="px-6 py-4 whitespace-nowrap">{item.size}</td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm">
-                    <div className="flex space-x-2">
-                      <button 
-                        onClick={() => openFileInfo(item)}
-                        className="text-blue-500 hover:text-blue-700"
-                      >
-                        <i className="fa-solid fa-info-circle"></i>
-                      </button>
-                      <button 
-                        className="text-blue-500 hover:text-blue-700"
-                        onClick={() => {
-                          // 直接使用API返回的URL，支持外部存储
-                          navigator.clipboard.writeText(item.url);
-                          alert('URL已复制到剪贴板');
-                        }}
-                      >
-                        <i className="fa-solid fa-copy"></i>
-                      </button>
-                      <button 
-                        onClick={() => deleteFile(item.id)}
-                        className="text-red-500 hover:text-red-700"
-                      >
-                        <i className="fa-solid fa-trash-can"></i>
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      )}
-      
-      {/* 分页 */}
-      {!isLoading && !error && mediaItems.length > 0 && (
-      <div className="mt-6 flex justify-between items-center">
-        <div className="text-text-light text-sm">
-            显示 {((pagination.page - 1) * pagination.limit) + 1}-{Math.min(pagination.page * pagination.limit, pagination.total)} 项，共 {pagination.total} 项
-        </div>
+      {/* 简化分页 */}
+      {!isLoading && !error && mediaItems.length > 0 && pagination.totalPages > 1 && (
+        <div className="mt-6 flex justify-center">
         <div className="flex space-x-1">
-            <button 
-              onClick={() => changePage(pagination.page - 1)} 
-              disabled={pagination.page <= 1}
-              className="w-10 h-10 rounded-lg flex items-center justify-center bg-bg-card border border-gray-200 dark:border-gray-600 text-text-light disabled:opacity-50"
-            >
-            <i className="fas fa-chevron-left"></i>
-          </button>
-            
             {Array.from({ length: Math.min(5, pagination.totalPages) }, (_, i) => {
               let pageNum;
               
@@ -490,21 +437,13 @@ export default function MediaPage() {
                   className={`w-10 h-10 rounded-lg flex items-center justify-center ${
                     pagination.page === pageNum 
                       ? 'bg-primary text-white' 
-                      : 'bg-bg-card border border-gray-200 dark:border-gray-600 text-text-light'
+                      : 'bg-bg-card border border-gray-200 text-text-light'
                   }`}
                 >
                   {pageNum}
           </button>
               );
             })}
-            
-            <button 
-              onClick={() => changePage(pagination.page + 1)} 
-              disabled={pagination.page >= pagination.totalPages}
-              className="w-10 h-10 rounded-lg flex items-center justify-center bg-bg-card border border-gray-200 dark:border-gray-600 text-text-light disabled:opacity-50"
-            >
-            <i className="fas fa-chevron-right"></i>
-          </button>
         </div>
       </div>
       )}
@@ -512,21 +451,25 @@ export default function MediaPage() {
       {/* 上传模态框 */}
       {showUploadModal && (
         <div className="fixed inset-0 flex items-center justify-center z-50">
-          <div className="modal-backdrop" onClick={() => setShowUploadModal(false)}></div>
+          <div className="modal-backdrop" onClick={closeUploadModal}></div>
           
-          <div className="modal-content z-50 p-6 max-w-md w-full" onClick={(e) => e.stopPropagation()}>
-            <div className="flex justify-between items-center mb-4 pb-2 border-b border-gray-200 dark:border-gray-700">
+          <div className="modal-content z-50 p-6 max-w-md w-full">
+            <div className="flex justify-between items-center mb-4 pb-2 border-b">
               <h3 className="text-xl font-bold">上传媒体</h3>
-              <button onClick={() => setShowUploadModal(false)} className="text-text-light hover:text-primary">
+              <button 
+                onClick={closeUploadModal} 
+                className="text-text-light hover:text-primary"
+                disabled={isUploading}
+              >
                 <i className="fas fa-times"></i>
               </button>
             </div>
             
             <div className="mb-6">
-              <div className={`border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg p-8 text-center ${!isUploading ? 'bg-gray-50 dark:bg-gray-800' : ''}`}>
+              <div className={`border-2 border-dashed rounded-lg p-8 text-center ${!isUploading ? 'bg-gray-50' : ''}`}>
                 {!isUploading ? (
                   <div>
-                    <div className="text-4xl text-gray-300 dark:text-gray-600 mb-4">
+                    <div className="text-4xl text-gray-300 mb-4">
                       <i className="fas fa-cloud-upload-alt"></i>
                     </div>
                     <p className="mb-4">拖放文件到此处，或点击选择文件</p>
@@ -540,11 +483,11 @@ export default function MediaPage() {
                     />
                     <label 
                       htmlFor="mediaFileUpload" 
-                      className="px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary-dark transition-colors cursor-pointer inline-block"
+                      className="px-4 py-2 bg-primary text-white rounded-lg cursor-pointer inline-block"
                     >
                       选择文件
                     </label>
-                    <p className="text-xs text-text-light mt-3">可以选择多个文件同时上传</p>
+                    <p className="text-xs text-text-light mt-3">可选择多个文件</p>
                   </div>
                 ) : (
                   <div>
@@ -558,152 +501,12 @@ export default function MediaPage() {
                       </div>
                     </div>
                     
-                    <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2.5 mb-2">
+                    <div className="w-full bg-gray-200 rounded-full h-2.5 mb-2">
                       <div className="bg-primary h-2.5 rounded-full" style={{width: `${uploadProgress}%`}}></div>
                     </div>
                   </div>
                 )}
               </div>
-              
-              <div className="mt-4 text-sm text-text-light">
-                <p>支持的文件类型：JPG, PNG, GIF, SVG, MP4, PDF</p>
-                <p>单个文件最大：20MB</p>
-              </div>
-            </div>
-            
-            <div className="flex justify-end space-x-3">
-              <button 
-                onClick={() => setShowUploadModal(false)}
-                className="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
-              >
-                取消
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-      
-      {/* 文件信息模态框 */}
-      {showInfoModal && selectedFile && (
-        <div className="fixed inset-0 flex items-center justify-center z-50">
-          <div className="modal-backdrop" onClick={closeAllModals}></div>
-          
-          <div className="modal-content z-50 p-6 max-w-lg w-full" onClick={(e) => e.stopPropagation()}>
-            <div className="flex justify-between items-center mb-4 pb-2 border-b border-gray-200 dark:border-gray-700">
-              <h3 className="text-xl font-bold">文件信息</h3>
-              <button onClick={closeAllModals} className="text-text-light hover:text-primary">
-                <i className="fas fa-times"></i>
-              </button>
-            </div>
-            
-            <div className="mb-6 flex flex-col md:flex-row">
-              <div className="md:w-1/3 mb-4 md:mb-0 md:mr-4">
-                <div className="aspect-square bg-gray-100 dark:bg-gray-800 rounded-lg overflow-hidden">
-                  {selectedFile.type === 'video' ? (
-                    <div className="relative w-full h-full">
-                      <Image 
-                        src={convertToApiImageUrl(selectedFile.thumbnailUrl || '/images/video-placeholder.svg')} 
-                        alt={selectedFile.name} 
-                        width={200} 
-                        height={200} 
-                        className="w-full h-full object-cover" 
-                      />
-                      <div className="absolute inset-0 flex items-center justify-center">
-                        <button 
-                          onClick={() => window.open(selectedFile.url, '_blank')}
-                          className="w-12 h-12 rounded-full bg-primary-dark bg-opacity-80 text-white flex items-center justify-center hover:bg-opacity-100"
-                        >
-                          <i className="fas fa-play"></i>
-                        </button>
-                      </div>
-                    </div>
-                  ) : (
-                    <Image 
-                      src={convertToApiImageUrl(selectedFile.url)} 
-                      alt={selectedFile.name} 
-                      width={200} 
-                      height={200} 
-                      className="w-full h-full object-cover" 
-                    />
-                  )}
-                </div>
-              </div>
-              
-              <div className="md:w-2/3">
-                <div className="mb-4">
-                  <label className="block text-sm font-medium mb-2">文件名称</label>
-                  <div className="flex">
-                    <input 
-                      type="text" 
-                      value={selectedFile.name}
-                      onChange={(e) => setSelectedFile({...selectedFile, name: e.target.value})}
-                      className="flex-1 px-4 py-2 rounded-l-lg bg-gray-100 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 focus:outline-none focus:ring-2 focus:ring-primary"
-                    />
-                    <button className="px-4 py-2 bg-gray-200 dark:bg-gray-700 border border-l-0 border-gray-200 dark:border-gray-700 rounded-r-lg">
-                      重命名
-                    </button>
-                  </div>
-                </div>
-                
-                <div className="grid grid-cols-2 gap-4 mb-4">
-                  <div>
-                    <label className="block text-sm font-medium mb-2">文件大小</label>
-                    <div className="px-4 py-2 rounded-lg bg-gray-100 dark:bg-gray-800 border border-gray-200 dark:border-gray-700">{selectedFile.size}</div>
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium mb-2">上传日期</label>
-                    <div className="px-4 py-2 rounded-lg bg-gray-100 dark:bg-gray-800 border border-gray-200 dark:border-gray-700">{selectedFile.date}</div>
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium mb-2">尺寸</label>
-                    <div className="px-4 py-2 rounded-lg bg-gray-100 dark:bg-gray-800 border border-gray-200 dark:border-gray-700">{selectedFile.width} × {selectedFile.height} px</div>
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium mb-2">文件类型</label>
-                    <div className="px-4 py-2 rounded-lg bg-gray-100 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 capitalize">{selectedFile.type}</div>
-                  </div>
-                </div>
-                
-                <div className="mb-4">
-                  <label className="block text-sm font-medium mb-2">文件链接</label>
-                  <div className="relative">
-                    <input 
-                      type="text" 
-                      value={selectedFile.url} 
-                      readOnly 
-                      className="w-full px-4 py-2 rounded-lg bg-gray-100 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 focus:outline-none focus:ring-2 focus:ring-primary pr-12"
-                    />
-                    <button 
-                      className="absolute right-2 top-1/2 transform -translate-y-1/2 text-primary hover:text-primary-dark"
-                      onClick={() => {
-                        // 直接使用API返回的URL，支持外部存储
-                        navigator.clipboard.writeText(selectedFile.url);
-                        alert('URL已复制到剪贴板');
-                      }}
-                    >
-                      <i className="fas fa-copy"></i>
-                    </button>
-                  </div>
-                </div>
-              </div>
-            </div>
-            
-            <div className="flex justify-between items-center pt-2 border-t border-gray-200 dark:border-gray-700">
-              <button 
-                onClick={() => {
-                  deleteFile(selectedFile.id);
-                }}
-                className="px-4 py-2 text-red-500 hover:text-red-700 transition-colors flex items-center"
-              >
-                <i className="fas fa-trash-can mr-1"></i> 删除文件
-              </button>
-              
-              <button 
-                onClick={closeAllModals}
-                className="px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary-dark transition-colors"
-              >
-                完成
-              </button>
             </div>
           </div>
         </div>

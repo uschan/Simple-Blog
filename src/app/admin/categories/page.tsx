@@ -334,7 +334,7 @@ export default function CategoriesPage() {
                 </th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-200 dark:divide-gray-700 bg-bg-card">
+            <tbody className="text-sm divide-y divide-gray-200 dark:divide-gray-700 bg-bg-card">
               {categories.map((category) => (
                 <tr key={category._id}>
                   <td className="px-6 py-4">

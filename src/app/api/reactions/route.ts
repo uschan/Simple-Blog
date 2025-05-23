@@ -26,7 +26,7 @@ export async function POST(request: Request) {
     }
     
     // 获取客户端IP
-    const headersList = headers();
+    const headersList = await headers();
     const ip = headersList.get('x-forwarded-for') || 
                headersList.get('x-real-ip') || 
                'unknown';

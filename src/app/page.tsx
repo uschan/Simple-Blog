@@ -180,12 +180,12 @@ export default async function Home() {
   return (
     <div className="container mx-auto px-4 py-8">
       {/* 顶部轮播区域 */}
-      <div className="mb-8">
+      <div className="mb-4">
         <HeroSlider articles={sliderArticles} />
       </div>
 
       {/* 特色文章区域 */}
-      <div className="mb-8">
+      <div className="mb-4">
         <h2 className="px-4 py-2 text-lg font-medium underline underline-offset-8 decoration-sky-500 decoration-wavy rounded-lg mb-4 flex items-center">
         <i className="fa-regular fa-face-kiss-wink-heart text-3xl text-sky-500 mr-3"></i>
           推荐阅读
@@ -201,6 +201,7 @@ export default async function Home() {
               <div className="relative">
                   {/* 固定比例的图片容器 */}
                   <div className="relative h-[220px]">
+                    <Link href={`/article/${article.slug}`}>
                     <OptimizedImage 
                       src={article.featuredImage || article.coverImage 
                         ? convertToApiImageUrl(article.featuredImage || article.coverImage || '') 
@@ -209,6 +210,7 @@ export default async function Home() {
                       fill
                       className="object-cover"
                     />
+                    </Link>
                     {/* 分类标签 */}
                     <div className="absolute top-2.5 left-2.5 flex space-x-2 z-20">
                       {article.categories?.length ? (
@@ -224,7 +226,7 @@ export default async function Home() {
               
               <div className="px-4 py-2">
                 <Link href={`/article/${article.slug}`}>
-                  <h3 className="text-xl font-normal text-primary mb-2">{article.title}</h3>
+                  <h3 className="text-xl font-bold text-primary mb-2">{article.title}</h3>
                 </Link>             
                 <div className="flex items-center mb-2">
                   <i className="fa-solid fa-user-astronaut mr-1"></i>

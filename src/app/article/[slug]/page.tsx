@@ -679,6 +679,7 @@ export default async function ArticlePage({ params }: { params: Promise<{ slug: 
                         // 默认单图类型
                         <div className="relative">
                           {related.featuredImage || related.coverImage ? (
+                            <Link href={`/article/${related.slug}`}>
                             <OptimizedImage 
                               src={convertToApiImageUrl(related.featuredImage || related.coverImage || '')} 
                               alt={related.title}
@@ -686,6 +687,7 @@ export default async function ArticlePage({ params }: { params: Promise<{ slug: 
                               height={250}
                               className="w-full"
                             />
+                            </Link>
                           ) : (
                             <div className="w-full h-[250px] bg-gray-200 flex items-center justify-center">
                               <i className="fas fa-file-alt text-gray-400 text-3xl"></i>
@@ -707,7 +709,7 @@ export default async function ArticlePage({ params }: { params: Promise<{ slug: 
                     
                     <div className="px-4 py-2">
                       <Link href={`/article/${related.slug}`}>
-                        <h3 className="text-xl font-normal text-primary mb-2">{related.title}</h3>
+                        <h3 className="text-xl font-bold text-primary mb-2">{related.title}</h3>
                       </Link>                      
                       <div className="flex items-center mb-2">
                         <i className="fa-solid fa-user-astronaut mr-1"></i>

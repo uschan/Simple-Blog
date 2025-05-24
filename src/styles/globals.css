@@ -11,8 +11,16 @@
   --color-text: oklch(0.141 0.005 285.823);
   --color-text-light: oklch(0.552 0.016 285.938);
   --border: oklch(0.92 0.004 286.32);
+  --font-sans: Raleway,'Eras ITC','京華老宋体', Arial, sans-serif;
 }
 
+body {
+  font-family: var(--font-sans);
+}
+
+body .article-content code, .article-content pre {
+   font-family: Raleway,'Eras ITC','京華老宋体', Arial, sans-serif; 
+}
 .dark {
   --color-primary: oklch(0.92 0.004 286.32);
   --color-primary-light: oklch(0.274 0.006 286.033);
@@ -79,6 +87,15 @@
   margin-bottom: 1rem;
 }
 
+.article-content p code{
+  color: rgb(194 65 12 / var(--tw-text-opacity, 1));
+  background-color: rgb(226 232 240 / var(--tw-bg-opacity, 1));
+  border-radius: 3px;
+  padding: 0 0.25rem;
+  margin: 0 0.25rem;
+  font-style: italic;
+}
+
 .article-content h2 {
   font-size: 1.5rem;
   font-weight: 700;
@@ -94,12 +111,13 @@
 }
 
 .article-content ul, .article-content ol {
-  margin-left: 2rem;
+  margin-left: 1rem;
   margin-bottom: 1rem;
 }
 
 .article-content ul li p{
   margin-bottom: 0.5rem;
+  margin-left: 0;
 }
 
 .article-content ul {
@@ -114,21 +132,27 @@
   margin-bottom: 0.5rem;
 }
 
+.article-content ol li ul, .article-content ul li ol, .article-content ul li ol li, .article-content ol li ul li {
+  margin-left: 0;
+}
+
 .article-content pre {
+  font-size: 0.75rem;
+  font-style: italic;
   background-color: #f7f7f7;
   padding: 1rem;
   border-radius: 0.5rem;
   overflow-x: auto;
   margin-bottom: 1rem;
+    /* 自动换行 */
+  white-space: pre-wrap;
+  word-break: break-word;
 }
 
 .dark .article-content pre {
   background-color: oklch(0.15 0 0);
 }
 
-.article-content code {
-  font-family: monospace;
-}
 
 .article-content blockquote {
   background-color: #f7f7f7;

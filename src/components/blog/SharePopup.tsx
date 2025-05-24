@@ -138,22 +138,11 @@ export default function SharePopup({ url, title, summary = '', isOpen, onClose }
           >
             <div 
               ref={popupRef}
-              className="bg-bg-card rounded-t-2xl md:rounded-2xl shadow-[0_0_25px_rgba(0,0,0,0.2)] w-full overflow-hidden"
+              className="bg-bg-card pb-10 rounded-t-2xl md:rounded-2xl shadow-[0_0_25px_rgba(0,0,0,0.2)] w-full overflow-hidden"
             >
               {/* 顶部拖动条 - 移动端友好 */}
               <div className="w-full flex justify-center pt-3 pb-1 md:hidden">
                 <div className="w-10 h-1 bg-gray-200 dark:bg-orange-600 rounded-full"></div>
-              </div>
-              
-              {/* 标题栏 */}
-              <div className="flex justify-between items-center p-4 md:pt-4 border-b border-gray-200 dark:border-gray-700">
-                <h3 className="text-lg font-semibold">分享文章</h3>
-                <button 
-                  onClick={onClose}
-                  className="text-gray-500 hover:text-gray-700 dark:hover:text-gray-300 p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
-                >
-                  <i className="fas fa-times"></i>
-                </button>
               </div>
               
               {/* 随机语录区域 */}
@@ -253,7 +242,7 @@ export default function SharePopup({ url, title, summary = '', isOpen, onClose }
                       type="text" 
                       value={fullUrl} 
                       readOnly 
-                      className="w-full pr-24 py-3 px-4 border border-gray-300 dark:border-gray-600 rounded-xl bg-gray-50 dark:bg-zinc-800 text-sm text-gray-700 dark:text-gray-200 shadow-inner"
+                      className="w-full pr-24 py-3 px-4 text-xs italic border border-gray-300 dark:border-gray-600 rounded-xl bg-gray-50 dark:bg-zinc-800 text-sm text-gray-700 dark:text-gray-200 shadow-inner"
                       onClick={(e) => e.currentTarget.select()}
                     />
                     <motion.button 
@@ -271,7 +260,7 @@ export default function SharePopup({ url, title, summary = '', isOpen, onClose }
                           <i className="fas fa-check mr-1"></i> 已复制
                         </span>
                       ) : (
-                        <span className="flex items-center">
+                        <span className="flex items-center text-xs">
                           <i className="fas fa-copy mr-1"></i> 复制链接
                         </span>
                       )}

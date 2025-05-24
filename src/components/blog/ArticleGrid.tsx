@@ -185,13 +185,15 @@ export default function ArticleGrid({ initialArticles, className = '' }: Article
                 // 默认单图类型
                 <div className="relative">
                   {article.featuredImage || article.coverImage ? (
-                    <OptimizedImage 
-                      src={convertToApiImageUrl(article.featuredImage || article.coverImage || '')} 
-                      alt={article.title}
-                      width={400}
-                      height={250}
-                      className="w-full"
-                    />
+                    <Link href={`/article/${article.slug}`}>
+                      <OptimizedImage 
+                        src={convertToApiImageUrl(article.featuredImage || article.coverImage || '')} 
+                        alt={article.title}
+                        width={400}
+                        height={250}
+                        className="w-full"
+                      />
+                    </Link>
                   ) : (
                     <div className="w-full h-[250px] bg-gray-200 flex items-center justify-center">
                       <i className="fas fa-file-alt text-gray-400 text-3xl"></i>
@@ -214,7 +216,7 @@ export default function ArticleGrid({ initialArticles, className = '' }: Article
             <div className="px-4 py-2">
 
               <Link href={`/article/${article.slug}`}>
-                <h3 className="text-xl font-normal text-primary mb-2">{article.title}</h3>
+                <h3 className="text-xl font-bold text-primary mb-2">{article.title}</h3>
               </Link>                
               <div className="flex items-center mb-2">
                 <i className="fa-solid fa-user-astronaut mr-1"></i>

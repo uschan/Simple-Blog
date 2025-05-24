@@ -71,7 +71,7 @@ const TiptapEditor = ({ initialValue = '', onChange }: TiptapEditorProps) => {
       }),
       Highlight.configure({
         HTMLAttributes: {
-          class: 'bg-yellow-200 text-yellow-800',
+          class: 'bg-yellow-200 text-yellow-800 mx-1 px-1 rounded',
         },
       }),
     ],
@@ -263,6 +263,16 @@ const TiptapEditor = ({ initialValue = '', onChange }: TiptapEditorProps) => {
             }`}
             title="代码块"
           >
+            <i className="fas fa-laptop-code"></i>
+          </button>
+          <button
+            key="code"
+            onClick={() => editor.chain().focus().toggleCode().run()}
+            className={`w-6 h-6 flex items-center justify-center rounded ${
+              editor.isActive('code') ? 'bg-gray-200 dark:bg-gray-700 text-blue-600' : 'hover:bg-gray-100 dark:hover:bg-zinc-800'
+            }`}
+            title="行内代码"
+          >
             <i className="fas fa-code"></i>
           </button>
           <button
@@ -389,11 +399,8 @@ const TiptapEditor = ({ initialValue = '', onChange }: TiptapEditorProps) => {
         }
         
         /* 链接样式 */
-        pre, code {
-          font-family: 'Eras ITC', sans-serif;
-        }
-        .ProseMirror p, .ProseMirror pre {
-          font-family: 'Eras ITC', sans-serif;
+        .ProseMirror, code  {
+          font-family: Raleway,'Eras ITC','京華老宋体', Arial, sans-serif; 
         }
         .ProseMirror a {
           margin: 0 5px;
@@ -407,7 +414,10 @@ const TiptapEditor = ({ initialValue = '', onChange }: TiptapEditorProps) => {
           color: #1d4ed8;
           text-decoration: underline;
         }
-        
+        .dark .ProseMirror strong {
+          font-weight: 900;
+          color: #fff;
+        }
         /* 代码块样式 */
         .ProseMirror pre {
           background-color: #f8f9fa;
@@ -416,7 +426,14 @@ const TiptapEditor = ({ initialValue = '', onChange }: TiptapEditorProps) => {
           overflow-x: auto;
           margin: 1rem 0;
         }
-        
+        .ProseMirror p code{
+          color: rgb(194 65 12 / var(--tw-text-opacity, 1));
+          background-color: rgb(226 232 240 / var(--tw-bg-opacity, 1));
+          font-style: italic;
+          border-radius: 3px;
+          padding: 0 0.25rem;
+          margin: 0 0.25rem;
+        }
         .dark .ProseMirror pre {
           background-color: #1e293b;
           color: #e2e8f0;

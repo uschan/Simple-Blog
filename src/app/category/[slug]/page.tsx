@@ -265,6 +265,7 @@ export default async function CategoryPage({ params }: { params: Promise<{ slug:
                       // 默认单图类型
                       <div className="relative">
                         {article.featuredImage || article.coverImage ? (
+                        <Link href={`/article/${article.slug}`}>
                         <OptimizedImage 
                             src={convertToApiImageUrl(article.featuredImage || article.coverImage || '')} 
                           alt={article.title}
@@ -272,6 +273,7 @@ export default async function CategoryPage({ params }: { params: Promise<{ slug:
                           height={250}
                           className="w-full"
                         />
+                        </Link>
                         ) : (
                           <div className="w-full h-[250px] bg-gray-200 flex items-center justify-center">
                             <i className="fas fa-file-alt text-gray-400 text-3xl"></i>

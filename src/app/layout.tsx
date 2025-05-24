@@ -104,7 +104,7 @@ export default async function RootLayout({
         />
       </head>
       <body
-        className={`${raleway.variable} font-sans bg-bg text-text min-h-screen flex flex-col transition-colors duration-200`}
+        className={`${raleway.variable} bg-bg text-text min-h-screen flex flex-col transition-colors duration-200`}
       >
         {/* 移除Font Awesome JS版本，只保留CSS版本避免冲突 */}
         

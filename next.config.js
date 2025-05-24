@@ -44,7 +44,7 @@ const nextConfig = {
         hostname: 'localhost',
       }
     ],
-    unoptimized: true,
+    unoptimized: false,
   },
 
   typescript: {

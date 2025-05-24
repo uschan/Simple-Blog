@@ -137,6 +137,7 @@ export default function HeroSlider({ articles }: HeroSliderProps) {
     <div className="relative w-full h-96 bg-gradient-to-b from-gray-300 to-gray-500 rounded-lg overflow-hidden group">
       {/* 文章图片 */}
       {(currentArticle.featuredImage || currentArticle.coverImage) ? (
+        <Link href={`/article/${currentArticle.slug}`}>
         <OptimizedImage
           src={convertToApiImageUrl(currentArticle.featuredImage || currentArticle.coverImage || '')}
           alt={currentArticle.title}
@@ -145,6 +146,7 @@ export default function HeroSlider({ articles }: HeroSliderProps) {
           priority
           onLoad={() => setIsLoaded(true)}
         />
+        </Link>
       ) : (
         <div className="w-full h-full bg-gradient-to-b from-gray-200 to-gray-600 flex items-center justify-center">
           <i className="fas fa-image text-white text-4xl"></i>
@@ -162,7 +164,7 @@ export default function HeroSlider({ articles }: HeroSliderProps) {
         </div>
         
         <Link href={`/article/${currentArticle.slug}`} className="group">
-          <h2 className="text-white text-2xl md:text-3xl font-medium mb-2 group-hover:text-primary-light transition-colors">
+          <h2 className="text-white text-2xl md:text-3xl font-medium mb-2 transition-colors">
             {currentArticle.title}
           </h2>
         </Link>

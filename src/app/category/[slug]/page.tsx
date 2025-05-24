@@ -295,7 +295,7 @@ export default async function CategoryPage({ params }: { params: Promise<{ slug:
                   
                   <div className="px-4 py-2">
                     <Link href={`/article/${article.slug}`}>
-                      <h3 className="text-xl font-normal text-primary mb-2">{article.title}</h3>
+                      <h3 className="text-xl font-bold text-primary mb-2">{article.title}</h3>
                     </Link>                    
                     <div className="flex items-center mb-2">
                       <i className="fa-solid fa-user-astronaut mr-1"></i>

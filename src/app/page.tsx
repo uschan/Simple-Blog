@@ -178,7 +178,7 @@ export default async function Home() {
   });
 
   return (
-    <div className="container mx-auto px-4 py-8">
+    <div className="container mx-auto p-4">
       {/* 顶部轮播区域 */}
       <div className="mb-4">
         <HeroSlider articles={sliderArticles} />
@@ -266,7 +266,7 @@ export default async function Home() {
         </div>
         
       {/* 分类区域 */}
-      <div className="mb-8">
+      <div className="mb-4">
         <h2 className="px-4 py-2 text-lg font-medium underline underline-offset-8 decoration-green-500 decoration-wavy rounded-lg mb-4 flex items-center">
         <i className="fa-regular fa-face-grin-squint-tears text-3xl text-green-500 mr-3 "></i>
         探索分类

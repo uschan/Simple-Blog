@@ -575,7 +575,7 @@ export default async function ArticlePage({ params }: { params: Promise<{ slug: 
         <div className="lg:w-1/3">
           {/* 作者信息卡片 */}
           {article.author && (
-            <div className="bg-bg-card rounded-lg overflow-hidden shadow-sm mb-8 border border-gray-200 p-6">
+            <div className="bg-bg-card rounded-lg overflow-hidden shadow-sm mb-4 border border-gray-200 p-6">
               <div className="flex items-center">
                 <div className="w-16 h-16 relative rounded-full overflow-hidden mr-4">
                   <Image

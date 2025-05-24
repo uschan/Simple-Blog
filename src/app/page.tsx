@@ -195,7 +195,7 @@ export default async function Home() {
             <p className="text-gray-500">暂无特色文章</p>
           </div>
         ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-4 lg:grid-cols-4 gap-6">
             {featuredApiArticles.map(article => (
               <div key={article._id} className="text-sm bg-bg-card rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-shadow border border-gray-200">
               <div className="relative">
@@ -271,7 +271,7 @@ export default async function Home() {
         <i className="fa-regular fa-face-grin-squint-tears text-3xl text-green-500 mr-3 "></i>
         探索分类
         </h2>
-        <div className="grid grid-cols-2 md:grid-cols-6 gap-4">
+        <div className="grid grid-cols-3 md:grid-cols-6 gap-4">
           {featuredCategories.length > 0 ? (
             featuredCategories.map((category, index) => (
               <Link 

@@ -483,9 +483,9 @@ export default async function ArticlePage({ params }: { params: Promise<{ slug: 
   }
   
   return (
-    <main className="container mx-auto p-4">
+    <main className="container mx-auto max-w-7xl p-4">
       {/* 返回链接 */}
-      <div className="flex text-sm items-center mb-2  pb-2">     
+      <div className="flex text-sm items-center mb-2 pb-2">     
         <div className="flex items-center mr-2 text-lg font-medium underline underline-offset-8 decoration-wavy">
           <i className="fa-solid fa-umbrella-beach mr-1"></i>
           <Link href="/" className="flex items-center hover:text-primary">

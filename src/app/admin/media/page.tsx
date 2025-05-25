@@ -276,13 +276,22 @@ export default function MediaPage() {
         </div>
         
         {/* 媒体内容 */}
-        <Image 
-          src={convertToApiImageUrl(item.type === 'video' ? (item.thumbnailUrl || '/images/video-placeholder.svg') : item.url)} 
-          alt={item.name} 
-          width={180} 
-          height={180} 
-          className="object-cover w-full h-full" 
-        />
+        {item.type === 'video' ? (
+          <video 
+            src={convertToApiImageUrl(item.url)}
+            className="object-cover w-full h-full"
+            preload="metadata"
+            controls
+          />
+        ) : (
+          <Image 
+            src={convertToApiImageUrl(item.url)} 
+            alt={item.name} 
+            width={120} 
+            height={120} 
+            className="object-cover w-full h-full" 
+          />
+        )}
         <div className="media-overlay">
           <div className="text-white">
             <div className="font-medium text-sm truncate">{item.name}</div>
@@ -317,6 +326,104 @@ export default function MediaPage() {
       setShowUploadModal(false);
     }
   }, [isUploading]);
+  
+  // 添加拖拽状态
+  const [isDragging, setIsDragging] = useState(false);
+  
+  // 处理拖拽事件
+  const handleDragOver = useCallback((e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(true);
+  }, []);
+  
+  const handleDragLeave = useCallback((e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(false);
+  }, []);
+  
+  const handleDrop = useCallback((e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(false);
+    
+    if (isUploading) return;
+    
+    const files = e.dataTransfer.files;
+    if (!files || files.length === 0) return;
+    
+    setIsUploading(true);
+    setUploadProgress(0);
+    
+    // 创建一个新的FormData
+    const formData = new FormData();
+    
+    // 添加所有文件
+    for (let i = 0; i < files.length; i++) {
+      formData.append('file', files[i]);
+      formData.append('type', 'media'); // 指定为媒体库上传
+    }
+    
+    // 异步上传文件
+    (async () => {
+      try {
+        const uploadedItems: MediaItem[] = [];
+        const total = files.length;
+        
+        // 针对多文件上传逐个处理
+        for (let i = 0; i < files.length; i++) {
+          const file = files[i];
+          
+          // 创建表单数据
+          const formData = new FormData();
+          formData.append('file', file);
+          formData.append('type', 'media'); // 指定为媒体库上传
+          
+          // 更新进度
+          setUploadProgress(Math.round((i / total) * 90)); 
+          
+          try {
+            const data = await uploadFile('/api/admin/upload', formData);
+            
+            if (data.success && data.data) {
+              uploadedItems.push(data.data);
+            }
+          } catch (error) {
+            console.error(`文件 ${file.name} 上传失败:`, error);
+            continue; // 继续处理下一个文件
+          }
+        }
+        
+        // 全部完成后更新进度到100%
+        setUploadProgress(100);
+        
+        // 如果有成功上传的文件，更新媒体列表
+        if (uploadedItems.length > 0) {
+          setMediaItems(prev => [...uploadedItems, ...prev]);
+          
+          // 上传成功后关闭模态框
+          setTimeout(() => {
+            setIsUploading(false);
+            setUploadProgress(0);
+            setShowUploadModal(false);
+            // 重新获取媒体列表以确保最新数据
+            fetchMedia(pagination.page, pagination.limit);
+          }, 500);
+        } else {
+          // 如果没有文件上传成功
+          alert('没有文件上传成功，请重试');
+          setIsUploading(false);
+          setUploadProgress(0);
+        }
+      } catch (error) {
+        console.error('上传文件失败:', error);
+        alert('上传失败，请重试');
+        setIsUploading(false);
+        setUploadProgress(0);
+      }
+    })();
+  }, [fetchMedia, isUploading, pagination.limit, pagination.page]);
   
   // 上传卡片组件
   const UploadCard = useCallback(() => (
@@ -403,13 +510,13 @@ export default function MediaPage() {
       {/* 网格视图 - 唯一保留的视图 */}
       {!isLoading && !error && mediaItems.length > 0 && (
         <div className="media-grid">
+          {/* 上传卡片 - 放在最前面 */}
+          <UploadCard />
+          
           {/* 使用 MediaItem 组件渲染每个媒体项 */}
           {mediaItems.map(item => (
             <MediaItem key={item.id} item={item} />
           ))}
-          
-          {/* 上传卡片 */}
-          <UploadCard />
         </div>
       )}
       
@@ -466,7 +573,15 @@ export default function MediaPage() {
             </div>
             
             <div className="mb-6">
-              <div className={`border-2 border-dashed rounded-lg p-8 text-center ${!isUploading ? 'bg-gray-50' : ''}`}>
+              <div 
+                className={`border-2 border-dashed rounded-lg p-8 text-center ${
+                  isDragging ? 'bg-primary bg-opacity-10 border-primary' : 
+                  !isUploading ? 'bg-gray-50' : ''
+                }`}
+                onDragOver={handleDragOver}
+                onDragLeave={handleDragLeave}
+                onDrop={handleDrop}
+              >
                 {!isUploading ? (
                   <div>
                     <div className="text-4xl text-gray-300 mb-4">

@@ -586,6 +586,70 @@ export default function CreateArticlePage() {
       : '已选择媒体');
   };
 
+  // 媒体上传相关处理函数
+  const handleDragOver = (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
+    e.currentTarget.classList.add('bg-primary', 'bg-opacity-10');
+  };
+  
+  const handleDragLeave = (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
+    e.currentTarget.classList.remove('bg-primary', 'bg-opacity-10');
+  };
+  
+  const handleDrop = async (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
+    e.currentTarget.classList.remove('bg-primary', 'bg-opacity-10');
+    
+    const files = e.dataTransfer.files;
+    if (!files || files.length === 0) return;
+    
+    // 检查是否接受当前文件类型
+    for (let i = 0; i < files.length; i++) {
+      const file = files[i];
+      if (mediaType === 'video' && !file.type.startsWith('video/')) {
+        toast.error('请上传视频文件');
+        return;
+      }
+      if ((mediaType === 'image' || mediaType === 'gallery') && !file.type.startsWith('image/')) {
+        toast.error('请上传图片文件');
+        return;
+      }
+    }
+    
+    try {
+      // 创建FormData并上传
+      for (let i = 0; i < files.length; i++) {
+        const fileFormData = new FormData();
+        fileFormData.append('file', files[i]);
+        fileFormData.append('type', 'media');
+        
+        const result = await uploadFile('/api/admin/upload', fileFormData);
+        
+        if (result.success) {
+          if (mediaType === 'image' && i === 0) {
+            setFormData(prevData => ({ ...prevData, featuredImage: result.filePath }));
+          } else if (mediaType === 'video' && i === 0) {
+            setFormData(prevData => ({ ...prevData, videoUrl: result.filePath }));
+          } else if (mediaType === 'gallery') {
+            setFormData(prevData => ({ 
+              ...prevData, 
+              galleryImages: [...prevData.galleryImages, result.filePath] 
+            }));
+          }
+        }
+      }
+      
+      toast.success(files.length > 1 ? `成功上传${files.length}个文件` : '上传成功');
+    } catch (error) {
+      console.error('拖放上传失败:', error);
+      toast.error('上传失败，请重试');
+    }
+  };
+
   // 保存文章
   const handleSave = async (status: "draft" | "published") => {
     if (!formData.title.trim()) {
@@ -721,7 +785,13 @@ export default function CreateArticlePage() {
                 {mediaType==='image' && formData.featuredImage && (<div className="relative mb-2"><img src={convertToApiImageUrl(formData.featuredImage)} alt="Featured" className="w-full h-40 object-cover rounded-lg" /><button onClick={()=>setFormData({...formData,featuredImage:''})} className="absolute top-2 right-2 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center">×</button></div>)}
                 {mediaType==='gallery' && formData.galleryImages.length>0 && (<div className="grid grid-cols-3 gap-2 mb-2">{formData.galleryImages.map((img,idx)=><div key={idx} className="relative group"><img src={convertToApiImageUrl(img)} alt={`图${idx+1}`} className="w-full h-20 object-cover rounded-lg"/><div className="absolute inset-0 bg-black bg-opacity-50 hidden group-hover:flex items-center justify-center"><button onClick={()=>{const arr=[...formData.galleryImages];arr.splice(idx,1);setFormData({...formData,galleryImages:arr});}} className="text-white p-1 rounded-full">×</button></div></div>)}</div>)}
                 {mediaType==='video' && formData.videoUrl && (<div className="relative mb-2"><video controls className="w-full h-40 object-cover rounded-lg"><source src={convertToApiImageUrl(formData.videoUrl)} type="video/mp4"/></video><button onClick={()=>setFormData({...formData,videoUrl:''})} className="absolute top-2 right-2 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center">×</button></div>)}
-                {((mediaType==='image'&&!formData.featuredImage)||(mediaType==='gallery'&&formData.galleryImages.length===0)||(mediaType==='video'&&!formData.videoUrl))&&<div className="h-40 bg-white dark:bg-zinc-900 rounded-lg flex flex-col items-center justify-center">
+                {((mediaType==='image'&&!formData.featuredImage)||(mediaType==='gallery'&&formData.galleryImages.length===0)||(mediaType==='video'&&!formData.videoUrl))&&
+                <div 
+                  className="h-40 bg-white dark:bg-zinc-900 rounded-lg flex flex-col items-center justify-center"
+                  onDragOver={handleDragOver}
+                  onDragLeave={handleDragLeave}
+                  onDrop={handleDrop}
+                >
                   <i className={`fas fa-${mediaType==='video'?'video':'image'} text-xl text-gray-400 mb-2`}></i>
                   <p className="text-sm text-text-light mb-3">拖放或点击上传</p>
                   <div className="flex gap-2">

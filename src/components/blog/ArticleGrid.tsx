@@ -155,10 +155,10 @@ export default function ArticleGrid({ initialArticles, className = '' }: Article
                     className="w-full h-[250px] object-cover bg-gray-100"
                   />
                   {/* 视频标识 */}
-                  <div className="absolute bottom-2 right-2 bg-primary text-white text-xs px-2 py-1 rounded-full">
+                  {/* <div className="absolute top-2.5 right-2.5 bg-black/60 backdrop-blur-md text-white text-xs font-medium px-3 py-1.5 rounded-full border border-white/20 shadow-lg flex items-center space-x-1.5 z-20">
                     <i className="fas fa-video mr-1"></i>
                     视频
-                  </div>
+                  </div> */}
                   {/* 分类标签 */}
                   <div className="absolute top-2.5 left-2.5 flex space-x-2 z-20">
                     {article.categories?.length ? (
@@ -192,6 +192,9 @@ export default function ArticleGrid({ initialArticles, className = '' }: Article
                         width={400}
                         height={250}
                         className="w-full"
+                        optimizeImage={true}
+                        imageFormat="webp"
+                        quality={85}
                       />
                     </Link>
                   ) : (

@@ -104,7 +104,7 @@ export default function Navbar({ categories = [] }: { categories: Category[] }) 
   // 不再需要获取分类，直接使用传入的分类
   const [isLoading, setIsLoading] = useState(false);
   // 使用相对路径，确保格式一致
-  const [siteLogo, setSiteLogo] = useState('/api/images?path=images%2Favatar.png');
+  const [siteLogo, setSiteLogo] = useState('/images/avatar.png');
   const overlayRef = useRef<HTMLDivElement>(null);
   const menuRef = useRef<HTMLDivElement>(null);
   

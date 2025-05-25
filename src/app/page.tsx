@@ -209,6 +209,9 @@ export default async function Home() {
                       alt={article.title}
                       fill
                       className="object-cover"
+                      optimizeImage={true}
+                      imageFormat="webp"
+                      quality={85}
                     />
                     </Link>
                     {/* 分类标签 */}
@@ -284,6 +287,9 @@ export default async function Home() {
                   alt={category.name}
                   fill
                   className="object-cover group-hover:scale-105 transition-transform duration-300"
+                  optimizeImage={true}
+                  imageFormat="webp"
+                  quality={85}
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent flex items-end p-4">
                   <h3 className="text-white font-medium">{category.name}</h3>

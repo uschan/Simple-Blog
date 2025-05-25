@@ -108,19 +108,60 @@ export function convertToApiImageUrl(url: string): string {
     // 移除开头的斜杠以确保路径正确
     const cleanPath = url.startsWith('/') ? url.substring(1) : url;
     
-    // 在客户端使用完整URL，在服务器端使用相对URL
-    // 这样可以避免服务器端渲染问题
-    if (typeof window !== 'undefined') {
-      // 客户端: 使用完整URL
-      const baseUrl = process.env.NEXT_PUBLIC_API_URL || window.location.origin;
-      return `${baseUrl}/api/images?path=${encodeURIComponent(cleanPath)}`;
-    } else {
-      // 服务器端: 使用相对URL
-      return `/api/images?path=${encodeURIComponent(cleanPath)}`;
-    }
+    // 使用相对URL，确保服务端和客户端一致
+    return `/api/images?path=${encodeURIComponent(cleanPath)}`;
   } catch (error) {
     console.error('图片URL转换错误:', error, url);
     // 出错时返回原始URL
+    return url;
+  }
+}
+
+/**
+ * 生成优化的图片URL
+ * @param url 原始图片URL
+ * @param options 优化选项
+ * @returns 优化后的图片URL
+ */
+export function getOptimizedImageUrl(
+  url: string, 
+  options: {
+    width?: number;
+    format?: 'webp' | 'jpeg' | 'png' | 'avif';
+    quality?: number;
+  } = {}
+): string {
+  // 如果URL为空，返回空字符串
+  if (!url) return '';
+  
+  // 外部URL不进行处理
+  if (url.startsWith('http://') || url.startsWith('https://')) {
+    return url;
+  }
+  
+  try {
+    // 清理路径
+    const cleanPath = url.startsWith('/') ? url.substring(1) : url;
+    
+    // 构建API URL - 总是使用相对路径，避免客户端/服务端不一致
+    let apiUrl = `/api/images/optimize?path=${encodeURIComponent(cleanPath)}`;
+    
+    // 添加优化参数
+    if (options.width) {
+      apiUrl += `&width=${options.width}`;
+    }
+    
+    if (options.format) {
+      apiUrl += `&format=${options.format}`;
+    }
+    
+    if (options.quality) {
+      apiUrl += `&quality=${options.quality}`;
+    }
+    
+    return apiUrl;
+  } catch (error) {
+    console.error('优化图片URL生成错误:', error, url);
     return url;
   }
 }

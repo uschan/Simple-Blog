@@ -75,74 +75,122 @@ export default function ArticleGrid({ initialArticles, className = '' }: Article
 
   // 加载更多文章
   const loadMoreArticles = useCallback(async () => {
-    if (loading || !hasMore || reachedMax) return;
+    if (loading || reachedMax) return;
 
     try {
       setLoading(true);
       const nextPage = page + 1;
+      console.log('加载更多文章, 页码:', nextPage);
 
       // 使用API工具库获取更多文章
       const result = await publicGet(`/articles/page?page=${nextPage}&limit=${ITEMS_PER_PAGE}`);
+      console.log('API返回结果:', result);
 
-      if (result.success && Array.isArray(result.data)) {
+      if (result && Array.isArray(result.data)) {
+        // 检查是否有新文章并去重
         if (result.data.length > 0) {
-          setArticles(prev => [...prev, ...result.data]);
-          setPage(nextPage);
-        }
+          // 去重：过滤掉已经存在的文章
+          const existingIds = new Set(articles.map(article => article._id));
+          const newArticles = result.data.filter((article: Article) => !existingIds.has(article._id));
+          
+          console.log(`获取到${result.data.length}篇文章，过滤重复后剩余${newArticles.length}篇`);
+          
+          if (newArticles.length > 0) {
+            setArticles(prev => [...prev, ...newArticles]);
+            setPage(nextPage);
+            console.log(`已加载${newArticles.length}篇新文章`);
+          }
 
-        // 检查是否还有更多数据
-        setHasMore(result.pagination?.hasMore || false);
+          // 检查是否还有更多数据 - 只有明确为false时才设置为没有更多
+          const hasMoreData = result.pagination?.hasMore !== false && newArticles.length > 0;
+          setHasMore(hasMoreData);
+          console.log('是否有更多数据:', hasMoreData);
 
-        // 检查是否达到最大限制
-        if (!result.pagination?.hasMore || result.data.length === 0) {
+          // 检查是否达到最大限制
+          if (result.pagination?.hasMore === false || newArticles.length === 0) {
+            console.log('已达到最大限制，没有更多数据');
+            setReachedMax(true);
+          }
+        } else {
+          // 没有返回新数据，表示已经到底了
+          console.log('没有获取到新文章，已到底');
+          setHasMore(false);
           setReachedMax(true);
         }
       } else {
-        // 出错或没有更多数据
-        setHasMore(false);
+        // API返回异常处理
+        console.error('API返回格式异常:', result);
+        // 不立即设置hasMore为false，给后续加载机会
+        if (page > 3) { // 多尝试几页后再放弃
+          setHasMore(false);
+        }
       }
     } catch (error) {
       console.error('加载更多文章失败:', error);
-      setHasMore(false);
+      // 出错后不立即放弃，给用户重试机会
+      if (page > 3) { // 多次失败后再停止尝试
+        setHasMore(false);
+      }
     } finally {
       setLoading(false);
     }
-  }, [loading, hasMore, page, reachedMax]);
+  }, [loading, hasMore, page, reachedMax, articles]);
 
-  // 处理滚动事件
+  // 处理滚动事件和自动加载
   useEffect(() => {
-    if (!isMounted.current) {
-      isMounted.current = true;
-      return;
+    // 创建观察器前判断是否需要自动加载
+    if (!hasMore || reachedMax || loading || autoLoadCount >= MAX_AUTO_LOADS) {
+      return; // 不需要创建观察器
     }
 
+    console.log('创建IntersectionObserver, 当前状态:', {
+      hasMore, 
+      autoLoadCount, 
+      reachedMax, 
+      articlesCount: articles.length
+    });
+
+    // 创建观察器
     const observer = new IntersectionObserver(
       (entries) => {
         const [entry] = entries;
-        if (entry.isIntersecting && hasMore && autoLoadCount < MAX_AUTO_LOADS && !loading) {
+        if (entry.isIntersecting && !loading) {
+          console.log('检测到loadMoreRef进入视口，触发加载');
           loadMoreArticles();
           setAutoLoadCount(prev => prev + 1);
         }
       },
-      { threshold: 0.1 }
+      { 
+        threshold: 0.1, 
+        rootMargin: '200px' // 增大rootMargin提前触发
+      }
     );
 
+    // 确保元素存在后再观察
     if (loadMoreRef.current) {
       observer.observe(loadMoreRef.current);
     }
 
+    // 清理函数
     return () => {
-      if (loadMoreRef.current) {
-        observer.unobserve(loadMoreRef.current);
-      }
+      observer.disconnect();
     };
-  }, [loadMoreArticles, hasMore, autoLoadCount, loading]);
+  }, [loadMoreArticles, hasMore, reachedMax, loading, autoLoadCount, articles.length]);
+
+  // 检查初始文章是否已达到最大限制
+  useEffect(() => {
+    if (initialArticles.length < ITEMS_PER_PAGE && !reachedMax) {
+      console.log('初始文章数量不足一页，标记为已到底');
+      setHasMore(false);
+      setReachedMax(true);
+    }
+  }, [initialArticles.length, reachedMax]);
 
   return (
     <div className={`mb-8 ${className}`}>
       <div className="pinterest-grid">
-        {articles.map((article) => (
-          <div key={article._id} className="pinterest-item text-sm bg-bg-card rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-shadow border border-gray-200">
+        {articles.map((article, index) => (
+          <div key={`${article._id}-${index}`} className="pinterest-item text-sm bg-bg-card rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-shadow border border-gray-200">
             <div className="relative">
               {/* 根据coverType显示不同类型的媒体 */}
               {article.coverType === 'video' ? (
@@ -259,26 +307,31 @@ export default function ArticleGrid({ initialArticles, className = '' }: Article
 
       {/* 加载更多区域 */}
       <div ref={loadMoreRef} className="flex justify-center mt-8">
-        {hasMore ? (
+        {loading ? (
+          // 加载中状态
+          <div className="flex items-center justify-center py-4">
+            <i className="fas fa-circle-notch fa-spin mr-2"></i>
+            <span>加载中...</span>
+          </div>
+        ) : hasMore ? (
+          // 可以加载更多
           autoLoadCount >= MAX_AUTO_LOADS ? (
+            // 显示手动加载按钮
             <button 
               onClick={loadMoreArticles} 
-              disabled={loading}
-              className="px-6 py-2 border border-gray-200 rounded-md text-text hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors disabled:opacity-50"
+              className="px-6 py-2 border border-gray-200 rounded-md text-text hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
             >
-              {loading ? '加载中...' : '加载更多'}
+              加载更多
             </button>
           ) : (
-            <div className="py-4">
-              {loading && (
-                <div className="flex items-center justify-center">
-                  <i className="fas fa-circle-notch fa-spin mr-2"></i>
-                  <span>加载中...</span>
-                </div>
-              )}
+            // 自动加载模式，显示提示
+            <div className="py-4 text-sm text-gray-400">
+              <i className="fas fa-angles-down fa-beat-fade mr-1"></i> 
+              向下滚动加载更多
             </div>
           )
         ) : (
+          // 没有更多文章
           articles.length > 0 && (
             <div className="text-center py-4 text-gray-500">
               <i className="fa-solid fa-paint-roller mr-2"></i>

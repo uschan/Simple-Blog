@@ -38,7 +38,7 @@ export default function MediaPage() {
   const [mediaItems, setMediaItems] = useState<MediaItem[]>([]);
   const [pagination, setPagination] = useState<Pagination>({
     page: 1,
-    limit: 50, // 增大一页显示的数量
+    limit: 31, // 增大一页显示的数量
     total: 0,
     totalPages: 0
   });
@@ -48,7 +48,7 @@ export default function MediaPage() {
   const [isDeleting, setIsDeleting] = useState(false);
   
   // 获取媒体文件 - 简化版
-  const fetchMedia = useCallback(async (page = 1, limit = 50) => {
+  const fetchMedia = useCallback(async (page = 1, limit = 31) => {
     setIsLoading(true);
     setError(null);
     

@@ -257,7 +257,6 @@ export default function Navbar({ categories = [] }: { categories: Category[] }) 
                 className="rounded-full object-cover" 
                 priority
               />
-              <span className="ml-2 text-text-light hidden md:inline">野盐</span>
             </div>
             
             {/* 主题切换按钮 - 使用纯客户端组件 */}

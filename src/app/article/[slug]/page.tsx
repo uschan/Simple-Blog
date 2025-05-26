@@ -709,7 +709,7 @@ export default async function ArticlePage({ params }: { params: Promise<{ slug: 
                     
                     <div className="px-4 py-2">
                       <Link href={`/article/${related.slug}`}>
-                        <h3 className="text-xl font-bold text-primary mb-2">{related.title}</h3>
+                        <h3 className="text-base font-bold text-primary mb-2">{related.title}</h3>
                       </Link>                      
                       <div className="flex items-center mb-2">
                         <i className="fa-solid fa-user-astronaut mr-1"></i>

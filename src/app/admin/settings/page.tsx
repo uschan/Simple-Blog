@@ -84,11 +84,8 @@ interface SiteSettings {
     icon: string;
   }>;
   
-  // 网站统计
-  analytics: {
-    type: 'google' | 'umami';
-    trackingCode: string;
-  };
+  // 统计代码 (直接存储完整代码)
+  analyticsCode: string;
 }
 
 // 系统设置页面组件
@@ -131,48 +128,8 @@ export default function SettingsPage() {
           socials = [];
         }
         
-        // 专门处理analytics
-        let analyticsType = 'google';
-        let analyticsCode = '';
-        
-        // 解析不同可能的格式
-        if (typeof data.analytics === 'string') {
-          try {
-            // 尝试解析为JSON
-            const parsedAnalytics = JSON.parse(data.analytics);
-            if (parsedAnalytics.type) {
-              analyticsType = parsedAnalytics.type === 'umami' ? 'umami' : 'google';
-            }
-            if (parsedAnalytics.trackingCode) {
-              analyticsCode = parsedAnalytics.trackingCode;
-            }
-          } catch (e) {
-            // 尝试直接使用字符串作为跟踪代码
-            analyticsCode = data.analytics;
-          }
-        } else if (data.analytics && typeof data.analytics === 'object') {
-          // 处理对象格式
-          if (data.analytics.type) {
-            analyticsType = data.analytics.type === 'umami' ? 'umami' : 'google';
-          }
-          if (data.analytics.trackingCode) {
-            analyticsCode = data.analytics.trackingCode;
-          }
-        } else if (data['analytics.type'] || data['analytics.trackingCode']) {
-          // 处理扁平格式
-          if (data['analytics.type']) {
-            analyticsType = data['analytics.type'] === 'umami' ? 'umami' : 'google';
-          }
-          if (data['analytics.trackingCode']) {
-            analyticsCode = data['analytics.trackingCode'];
-          }
-        }
-        
-        // 构建最终analytics对象
-        const analytics = {
-          type: analyticsType as 'google' | 'umami',
-          trackingCode: analyticsCode
-        };
+        // 直接使用analyticsCode字段
+        const analyticsCode = data.analyticsCode || '';
         
         // 构建格式化的设置数据
         const formattedSettings: SiteSettings = {
@@ -183,7 +140,7 @@ export default function SettingsPage() {
           favicon: data.favicon || '/images/favicon.ico',
           copyright: data.copyright || '',
           socials: socials,
-          analytics: analytics
+          analyticsCode: analyticsCode
         };
         
         // 更新状态
@@ -203,19 +160,9 @@ export default function SettingsPage() {
     loadSettings();
   }, []);
   
-  // 保存设置后验证analytics数据
+  // 组件加载后无需额外处理
   useEffect(() => {
-    if (!isLoading && settings) {
-      if (!settings.analytics) {
-        setSettings({
-          ...settings,
-          analytics: {
-            type: 'google',
-            trackingCode: ''
-          }
-        });
-      }
-    }
+    // 已在loadSettings中初始化所有必要字段
   }, [isLoading, settings]);
   
   // 保存设置
@@ -228,8 +175,8 @@ export default function SettingsPage() {
       // 创建要发送的数据副本
       const dataToSave = {
         ...settings,
-        // 特殊处理analytics字段
-        analytics: JSON.stringify(settings.analytics)
+        // 确保统计代码被正确保存
+        analyticsCode: settings.analyticsCode || ''
       };
       
       // 发送数据到服务器
@@ -510,90 +457,32 @@ export default function SettingsPage() {
             {/* 统计代码 */}
             <div className="mb-4">
               <h2 className="block text-sm dark:text-blue-500 font-medium mb-2">⋙⋙◜网站统计◝</h2>
-              
-              <div className="flex space-x-4 mb-4">
-                <label className="inline-flex items-center">
-                  <input 
-                    type="radio" 
-                    name="analytics" 
-                    value="google" 
-                    checked={settings.analytics?.type === 'google'}
-                    onChange={() => {
-                      // 确保analytics存在
-                      const currentSettings = {...settings};
-                      if (!currentSettings.analytics) {
-                        currentSettings.analytics = {
-                          type: 'google',
-                          trackingCode: ''
-                        };
-                      } else {
-                        currentSettings.analytics = {
-                          ...currentSettings.analytics,
-                          type: 'google'
-                        };
-                      }
-                      
-                      setSettings(currentSettings);
-                    }}
-                    className="rounded-full text-primary"
-                  />
-                  <span className="ml-2 text-xs">Google Analytics</span>
-                </label>
-                <label className="inline-flex items-center">
-                  <input 
-                    type="radio" 
-                    name="analytics" 
-                    value="umami" 
-                    checked={settings.analytics?.type === 'umami'}
-                    onChange={() => {
-                      // 确保analytics存在
-                      const currentSettings = {...settings};
-                      if (!currentSettings.analytics) {
-                        currentSettings.analytics = {
-                          type: 'umami',
-                          trackingCode: ''
-                        };
-                      } else {
-                        currentSettings.analytics = {
-                          ...currentSettings.analytics,
-                          type: 'umami'
-                        };
-                      }
-                      
-                      setSettings(currentSettings);
-                    }}
-                    className="rounded-full text-primary"
-                  />
-                  <span className="ml-2 text-xs">Umami</span>
-                </label>
-              </div>
             
               <div>
-                <label className="block text-sm dark:text-blue-500 font-medium mb-2">⋙⋙◜跟踪代码◝</label>
+                <label className="block text-sm dark:text-blue-500 font-medium mb-2">⋙⋙◜统计代码◝</label>
+                <div className="mb-2 text-xs text-gray-600 dark:text-gray-400 italic">
+                  请直接粘贴完整的统计代码，支持同时添加多个统计服务（如Google Analytics、百度统计、Umami等）
+                </div>
                 <textarea 
-                  value={settings.analytics?.trackingCode || ''}
+                  value={settings.analyticsCode || ''}
                   onChange={(e) => {
-                    // 确保analytics存在
-                    const currentSettings = {...settings};
-                    const trackingCode = e.target.value;
-                    
-                    if (!currentSettings.analytics) {
-                      currentSettings.analytics = {
-                        type: 'google',
-                        trackingCode
-                      };
-                    } else {
-                      currentSettings.analytics = {
-                        ...currentSettings.analytics,
-                        trackingCode
-                      };
-                    }
-                    
-                    setSettings(currentSettings);
+                    setSettings({
+                      ...settings,
+                      analyticsCode: e.target.value
+                    });
                   }}
                   className="w-full text-xs italic px-4 py-2 rounded-lg bg-bg dark:bg-zinc-900 border border-gray-200 dark:border-0" 
-                  rows={5}
-                  placeholder="<!-- 在此粘贴您的跟踪代码 -->"
+                  rows={8}
+                  placeholder="<!-- 示例：在此粘贴您的完整统计代码 -->
+<script defer src='https://static.cloudflareinsights.com/beacon.min.js'></script>
+<!-- Google tag (gtag.js) -->
+<script async src='https://www.googletagmanager.com/gtag/js?id=G-XXXXXXXX'></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'G-XXXXXXXX');
+</script>"
                 ></textarea>
               </div>
             </div>

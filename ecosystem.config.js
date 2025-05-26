@@ -20,6 +20,7 @@ module.exports = {
 
       NEXTAUTH_SECRET: '5N7H.%dx57{JWA:2PH)@', // 明确设置 NEXTAUTH_SECRET
       NEXTAUTH_URL: 'https://ai.wildsalt.me',
+      JWT_SECRET: '5N7H.%dx57{JWA:2PH)@', // 添加 JWT_SECRET 环境变量
       
       // 其他您需要在生产环境使用的环境变量也可以加在这里
 

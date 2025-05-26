@@ -109,7 +109,7 @@ export function convertToApiImageUrl(url: string): string {
     const cleanPath = url.startsWith('/') ? url.substring(1) : url;
     
     // 使用相对URL，确保服务端和客户端一致
-    return `/api/images?path=${encodeURIComponent(cleanPath)}`;
+      return `/api/images?path=${encodeURIComponent(cleanPath)}`;
   } catch (error) {
     console.error('图片URL转换错误:', error, url);
     // 出错时返回原始URL

@@ -97,16 +97,16 @@ export default function ArticleGrid({ initialArticles, className = '' }: Article
           
           if (newArticles.length > 0) {
             setArticles(prev => [...prev, ...newArticles]);
-            setPage(nextPage);
+          setPage(nextPage);
             console.log(`已加载${newArticles.length}篇新文章`);
-          }
+        }
 
           // 检查是否还有更多数据 - 只有明确为false时才设置为没有更多
           const hasMoreData = result.pagination?.hasMore !== false && newArticles.length > 0;
           setHasMore(hasMoreData);
           console.log('是否有更多数据:', hasMoreData);
 
-          // 检查是否达到最大限制
+        // 检查是否达到最大限制
           if (result.pagination?.hasMore === false || newArticles.length === 0) {
             console.log('已达到最大限制，没有更多数据');
             setReachedMax(true);
@@ -122,14 +122,14 @@ export default function ArticleGrid({ initialArticles, className = '' }: Article
         console.error('API返回格式异常:', result);
         // 不立即设置hasMore为false，给后续加载机会
         if (page > 3) { // 多尝试几页后再放弃
-          setHasMore(false);
+        setHasMore(false);
         }
       }
     } catch (error) {
       console.error('加载更多文章失败:', error);
       // 出错后不立即放弃，给用户重试机会
       if (page > 3) { // 多次失败后再停止尝试
-        setHasMore(false);
+      setHasMore(false);
       }
     } finally {
       setLoading(false);

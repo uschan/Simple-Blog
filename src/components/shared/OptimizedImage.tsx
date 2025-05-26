@@ -62,7 +62,7 @@ export default function OptimizedImage({
     // 否则使用合理的默认值
     return fill ? 1200 : 800;
   }, [propWidth, fill]);
-
+  
   // 使用API路由获取图片或优化的图片
   const finalSrc = useMemo(() => {
     if (typeof src === 'string') {

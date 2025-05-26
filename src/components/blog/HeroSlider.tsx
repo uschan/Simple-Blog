@@ -105,25 +105,25 @@ export default function HeroSlider({ articles }: HeroSliderProps) {
     >
       {/* 文章图片 */}
       <div className="relative h-full overflow-hidden">
-        {(currentArticle.featuredImage || currentArticle.coverImage) ? (
-          <Link href={`/article/${currentArticle.slug}`}>
-            <OptimizedImage
-              src={convertToApiImageUrl(currentArticle.featuredImage || currentArticle.coverImage || '')}
-              alt={currentArticle.title}
-              fill
+      {(currentArticle.featuredImage || currentArticle.coverImage) ? (
+        <Link href={`/article/${currentArticle.slug}`}>
+        <OptimizedImage
+          src={convertToApiImageUrl(currentArticle.featuredImage || currentArticle.coverImage || '')}
+          alt={currentArticle.title}
+          fill
               className="object-cover transition-transform duration-300"
-              priority
-              onLoad={() => setIsLoaded(true)}
+          priority
+          onLoad={() => setIsLoaded(true)}
               optimizeImage={true}
               imageFormat="webp"
               quality={85}
-            />
-          </Link>
-        ) : (
-          <div className="w-full h-full bg-gradient-to-b from-gray-200 to-gray-600 flex items-center justify-center">
-            <i className="fas fa-image text-white text-4xl"></i>
-          </div>
-        )}
+        />
+        </Link>
+      ) : (
+        <div className="w-full h-full bg-gradient-to-b from-gray-200 to-gray-600 flex items-center justify-center">
+          <i className="fas fa-image text-white text-4xl"></i>
+        </div>
+      )}
       </div>
       
       {/* 内容叠加层 */}

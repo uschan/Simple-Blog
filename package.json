@@ -4,9 +4,10 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "next build",
-    "start": "next start -p 3006",
-    "lint": "next lint"
+    "build": "next build && node scripts/fix-standalone-api.js",
+    "start": "next start -p 3000",
+    "lint": "next lint",
+    "fix-api": "node scripts/fix-standalone-api.js"
   },
   "dependencies": {
     "@editorjs/checklist": "^1.6.0",

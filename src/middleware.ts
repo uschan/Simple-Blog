@@ -2,8 +2,8 @@ import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
 import { verifyToken, extractTokenFromHeader } from '@/lib/jwt'
 
-// 声明此中间件在Node.js环境运行
-export const runtime = 'nodejs';
+// 使用默认运行时环境，避免与edge runtime冲突
+// 默认的运行时环境在服务器上应该是nodejs
 
 export async function middleware(request: NextRequest) {
   // 获取路径和请求方法

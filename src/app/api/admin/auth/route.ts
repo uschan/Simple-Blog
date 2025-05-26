@@ -1,8 +1,11 @@
-export const dynamic = 'force-dynamic';
 import { NextRequest, NextResponse } from 'next/server';
 import connectDB from '@/lib/db';
 import { User } from '@/models';
 import { JWT_SECRET, generateToken, verifyToken, extractTokenFromHeader } from '@/lib/jwt';
+
+// API 路由配置 - 确保在导入之后
+export const dynamic = 'force-dynamic';
+export const runtime = 'nodejs'; // 指定运行时环境
 
 // 管理员登录验证
 export async function POST(request: NextRequest) {

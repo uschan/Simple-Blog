@@ -30,23 +30,21 @@ const nextConfig = {
     ];
   },
 
+  // 外部包配置（已从experimental移出）
   serverExternalPackages: ['mongoose'],
   output: 'standalone',
   
-  // 确保API路由被正确包含在standalone输出中
+  // 文件追踪排除配置（已从experimental移出）
+  outputFileTracingExcludes: {
+    '*': [
+      'node_modules/@swc/core-linux-x64-gnu',
+      'node_modules/@swc/core-linux-x64-musl',
+      'node_modules/@esbuild/darwin-x64',
+    ],
+  },
+  
+  // 实验性功能
   experimental: {
-    // 必要的实验性配置，以确保API路由被正确构建
-    serverComponentsExternalPackages: ['mongoose'],
-    
-    // 排除一些不必要的构建文件
-    outputFileTracingExcludes: {
-      '*': [
-        'node_modules/@swc/core-linux-x64-gnu',
-        'node_modules/@swc/core-linux-x64-musl',
-        'node_modules/@esbuild/darwin-x64',
-      ],
-    },
-    
     // 启用服务器动作参考追踪，确保API路由被包含
     serverActions: {
       bodySizeLimit: '2mb',

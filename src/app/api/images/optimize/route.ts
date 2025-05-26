@@ -1,10 +1,12 @@
-export const dynamic = 'force-dynamic';
 import { NextRequest, NextResponse } from 'next/server';
 import sharp from 'sharp';
 import path from 'path';
 import { existsSync } from 'fs';
 import { readFile, stat } from 'fs/promises';
 import { getUploadBasePath } from '@/lib/utils';
+
+// 设置为动态路由
+export const dynamic = 'force-dynamic';
 
 // 最大图片宽度
 const MAX_WIDTH = 1200;

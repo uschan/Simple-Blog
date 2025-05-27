@@ -100,21 +100,15 @@ export default async function RootLayout({
           rel="stylesheet"
           href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css"
         />
-        <script defer src="https://cloud.umami.is/script.js" data-website-id="fdf9dc7b-d730-4230-94a4-39cfa679ab3a"></script>
         
-        {/* Google Analytics - 固定代码 */}
-        <Script
-          src="https://www.googletagmanager.com/gtag/js?id=G-H4HC4N7LM8"
-          strategy="afterInteractive"
-        />
-        <Script id="google-analytics" strategy="afterInteractive">
-          {`
-            window.dataLayer = window.dataLayer || [];
-            function gtag(){dataLayer.push(arguments);}
-            gtag('js', new Date());
-            gtag('config', 'G-H4HC4N7LM8');
-          `}
-        </Script>
+        {/* 从后台设置注入统计代码 - 直接使用dangerouslySetInnerHTML */}
+        {settings.analytics.trackingCode && (
+          <Script
+            id="analytics-code"
+            dangerouslySetInnerHTML={{ __html: settings.analytics.trackingCode }}
+            strategy="afterInteractive"
+          />
+        )}
       </head>
       <body
         className={`${raleway.variable} bg-bg text-text min-h-screen flex flex-col transition-colors duration-200`}

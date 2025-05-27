@@ -480,31 +480,8 @@ export default function SettingsPage() {
             <div className="mb-4">          
               <div>
                 <label className="block text-sm dark:text-blue-500 font-medium mb-2">⋙⋙◜统计代码◝</label>
-                <div className="mb-2">
-                  <select
-                    value={settings.analytics?.type || 'custom'}
-                    onChange={(e) => setSettings({
-                      ...settings,
-                      analytics: {
-                        ...settings.analytics,
-                        type: e.target.value as 'google' | 'umami' | 'custom'
-                      }
-                    })}
-                    className="w-full mb-3 text-xs px-4 py-2 rounded-lg bg-bg dark:bg-zinc-900 border border-gray-200 dark:border-0"
-                  >
-                    <option value="google">Google Analytics</option>
-                    <option value="umami">Umami Analytics</option>
-                    <option value="custom">自定义代码</option>
-                  </select>
-                </div>
                 <div className="mb-2 text-xs text-gray-600 dark:text-gray-400 italic">
-                  {settings.analytics?.type === 'google' ? (
-                    "请输入Google Analytics的测量ID (例如: G-XXXXXXXXXX)"
-                  ) : settings.analytics?.type === 'umami' ? (
-                    "请输入Umami的网站ID"
-                  ) : (
-                    "请直接粘贴完整的统计代码，支持同时添加多个统计服务"
-                  )}
+                  请直接粘贴完整的统计代码，支持同时添加多个统计服务（Google Analytics、百度统计、Umami等）
                 </div>
                 <textarea 
                   value={settings.analytics?.trackingCode || ''}
@@ -512,19 +489,23 @@ export default function SettingsPage() {
                     setSettings({
                       ...settings,
                       analytics: {
-                        ...settings.analytics,
+                        type: 'custom',
                         trackingCode: e.target.value
                       }
                     });
                   }}
                   className="w-full text-xs italic px-4 py-2 rounded-lg bg-bg dark:bg-zinc-900 border border-gray-200 dark:border-0" 
-                  rows={8}
-                  placeholder={settings.analytics?.type === 'google' ? 
-                    "G-XXXXXXXXXX" : 
-                    settings.analytics?.type === 'umami' ? 
-                    "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" :
-                    "<!-- 示例：在此粘贴您的完整统计代码 -->"
-                  }
+                  rows={12}
+                  placeholder="<!-- 示例：在此粘贴您的完整统计代码 -->
+<script defer src='https://cloud.umami.is/script.js' data-website-id='your-website-id'></script>
+<!-- Google tag (gtag.js) -->
+<script async src='https://www.googletagmanager.com/gtag/js?id=G-XXXXXXXX'></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'G-XXXXXXXX');
+</script>"
                 ></textarea>
               </div>
             </div>

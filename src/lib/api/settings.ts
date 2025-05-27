@@ -89,7 +89,7 @@ export const getSettings = cache(async (): Promise<SiteSettings> => {
         }
 
         // 获取分析代码类型和值
-        const analyticsType = settingsObj[STANDARD_FIELD_NAMES.ANALYTICS_TYPE] || 'custom';
+        let analyticsType = 'custom';
         let analyticsCode = settingsObj[STANDARD_FIELD_NAMES.ANALYTICS_CODE] || '';
         
         // 构建并返回公开可访问的网站设置对象
@@ -104,8 +104,8 @@ export const getSettings = cache(async (): Promise<SiteSettings> => {
             copyright: settingsObj[STANDARD_FIELD_NAMES.COPYRIGHT] || `© ${new Date().getFullYear()} 野盐. 保留所有权利。`,
             socials, // 使用上面解析或默认的社交媒体数据
             analytics: {
-                // 安全获取分析类型和代码，并提供默认值
-                type: analyticsType as 'google' | 'umami' | 'custom', 
+                // 安全获取分析代码，并提供默认值
+                type: 'custom', 
                 trackingCode: analyticsCode
             }
         };

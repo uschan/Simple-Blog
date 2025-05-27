@@ -124,7 +124,7 @@ async function getSliderArticles(): Promise<Article[]> {
 async function getFeaturedArticles(): Promise<Article[]> {
   try {
     // 使用serverFetch获取特色文章
-    const data = await serverFetch('/api/articles/featured?limit=3', {
+    const data = await serverFetch('/api/articles/featured?limit=4', {
       cache: 'no-store'
     });
     

@@ -133,9 +133,7 @@ export default async function RootLayout({
           src="/components/EmojiReaction.js"
           strategy="afterInteractive"
         />
-        {/* 从后台设置注入统计代码 - 直接使用dangerouslySetInnerHTML */}
-        {children}
-        
+        {/* 从后台设置注入统计代码 */}
         {settings.analytics.trackingCode && (
           <AnalyticsInjector trackingCode={settings.analytics.trackingCode} />
         )}     

@@ -2,14 +2,12 @@
 import "@/styles/globals.css";
 import type { Metadata } from "next";
 import { Raleway } from "next/font/google";
-import AnalyticsScript from "@/components/analytics/AnalyticsScript";
 import Script from "next/script";
 import { getSettings } from "@/lib/api/settings";
 import ClientRootLayout from "./ClientRootLayout";
 import { Toaster } from 'react-hot-toast'
 import { Category } from "@/models";
 import connectDB from "@/lib/db";
-import StaticAnalytics from "./StaticAnalytics";
 
 // 载入 Google Font
 const raleway = Raleway({
@@ -97,13 +95,14 @@ export default async function RootLayout({
           title={`${settings.siteName} RSS Feed`}
           href={`${siteUrl}/api/rss`}
         />
-        {/* 先尝试用AnalyticsScript加载，如果失败则使用StaticAnalytics作为备份 */}
-        <AnalyticsScript />
         {/* 标准方式加载Font Awesome CSS */}
         <link 
           rel="stylesheet"
           href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css"
         />
+        
+        {/* 统计代码 - 直接嵌入HTML */}
+        <div dangerouslySetInnerHTML={{ __html: settings.analyticsCode || '' }} />
       </head>
       <body
         className={`${raleway.variable} bg-bg text-text min-h-screen flex flex-col transition-colors duration-200`}
@@ -134,9 +133,6 @@ export default async function RootLayout({
           src="/components/EmojiReaction.js"
           strategy="afterInteractive"
         />
-        
-        {/* 备用统计代码加载方式 */}
-        <StaticAnalytics />
       </body>
     </html>
   );

@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { useState, useEffect, useRef } from 'react';
 import OptimizedImage from './OptimizedImage';
 import { get } from '@/lib/api'; // 导入get函数获取设置
+import { getDailyNotice } from '@/lib/api'; // 导入获取每日公告函数
 import { convertToApiImageUrl } from '@/lib/utils'; // 导入URL转换工具
 
 // 分类接口定义
@@ -13,6 +14,12 @@ interface Category {
   slug: string;
   isFeatured?: boolean;
   [key: string]: any; // 允许其他属性
+}
+
+// 公告接口
+interface Notice {
+  content: string;
+  date: string;
 }
 
 // 嵌入式Logo组件
@@ -92,8 +99,8 @@ function ThemeIcon() {
   if (!mounted) return <span className="w-4 h-4"></span>;
 
   return isDark ? 
-    <i className="fas fa-sun text-yellow-500"></i> : 
-    <i className="fas fa-moon"></i>;
+    <i className="fas fa-sun text-amber-500"></i> : 
+    <i className="fas fa-cloud-moon-rain"></i>;
 }
 
 // 更新Navbar组件接收服务端预渲染的分类数据
@@ -107,6 +114,13 @@ export default function Navbar({ categories = [] }: { categories: Category[] }) 
   const [siteLogo, setSiteLogo] = useState('/images/avatar.png');
   const overlayRef = useRef<HTMLDivElement>(null);
   const menuRef = useRef<HTMLDivElement>(null);
+  
+  // 添加公告状态
+  const [noticeData, setNoticeData] = useState<Notice | null>(null);
+  const [showNotice, setShowNotice] = useState(false);
+  const [noticeLoading, setNoticeLoading] = useState(false);
+  const noticeRef = useRef<HTMLDivElement>(null);
+  const logoRef = useRef<HTMLButtonElement>(null);
   
   // 获取当前日期信息，格式化显示
   const currentDate = new Date();
@@ -194,6 +208,64 @@ export default function Navbar({ categories = [] }: { categories: Category[] }) 
     }
   }, []);
 
+  // 获取每日公告
+  const fetchDailyNotice = async () => {
+    try {
+      setNoticeLoading(true);
+      const response = await getDailyNotice();
+      if (response.success && response.data) {
+        setNoticeData(response.data);
+      } else {
+        console.error('获取公告失败:', response);
+      }
+    } catch (error) {
+      console.error('获取公告错误:', error);
+    } finally {
+      setNoticeLoading(false);
+    }
+  };
+
+  // 处理点击Logo显示公告
+  const handleLogoClick = () => {
+    // 如果公告不存在，先获取
+    if (!noticeData) {
+      fetchDailyNotice();
+    }
+    // 显示弹窗
+    setShowNotice(true);
+  };
+
+  // 处理点击页面任意位置关闭公告
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      // 如果公告显示中，且点击的不是公告本身或公告内部元素，也不是头像按钮
+      if (
+        showNotice && 
+        noticeRef.current && 
+        !noticeRef.current.contains(event.target as Node) &&
+        logoRef.current && 
+        !logoRef.current.contains(event.target as Node)
+      ) {
+        setShowNotice(false);
+      }
+    };
+    
+    // 添加点击监听
+    document.addEventListener('mousedown', handleClickOutside);
+    
+    // 清理函数
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [showNotice]);
+
+  // 客户端组件挂载时获取公告
+  useEffect(() => {
+    if (mounted) {
+      fetchDailyNotice();
+    }
+  }, [mounted]);
+
   return (
     <>
       {/* 顶部信息栏 - 在移动端隐藏 */}
@@ -212,7 +284,7 @@ export default function Navbar({ categories = [] }: { categories: Category[] }) 
             <Link href="/api/rss" target="_blank" className="text-text hover:text-primary" title="RSS订阅">
               <i className="fas fa-rss"></i>
             </Link>
-            <span>记录一个无法被标准化的人,在模糊中选择看清，在混乱中主动寻找意义</span>
+            <span>记录一个无法被标准化的人：在模糊中选择看清，在混乱中主动寻找意义</span>
           </div>
         </div>
       </div>
@@ -246,27 +318,59 @@ export default function Navbar({ categories = [] }: { categories: Category[] }) 
 
           </nav>
           
-          {/* 圆形logo和主题切换 */}
+          {/* 圆形logo */}
           <div className="flex items-center space-x-4">
-            <div className="flex items-center">
-              <OptimizedImage 
-                src={siteLogo} 
-                alt="野盐" 
-                width={32} 
-                height={32} 
-                className="rounded-full object-cover" 
-                priority
-              />
-            </div>
-            
-            {/* 主题切换按钮 - 使用纯客户端组件 */}
-            <button 
+                        {/* 主题切换按钮 - 使用纯客户端组件 */}
+                        <button 
               onClick={toggleDarkMode}
               className="w-8 h-8 rounded-full bg-bg-card text-2xl text-text hover:bg-gray-200 dark:hover:bg-zinc-800 transition-colors"
               aria-label="切换主题"
             >
               {mounted && <ThemeIcon />}
             </button>
+            <div className="flex items-center relative">
+              <button 
+                ref={logoRef}
+                onClick={handleLogoClick}
+                className="rounded-full overflow-hidden transition-transform hover:scale-110 focus:outline-none"
+                aria-label="查看每日公告"
+              >
+                <OptimizedImage 
+                  src={siteLogo} 
+                  alt="野盐" 
+                  width={32} 
+                  height={32} 
+                  className="rounded-full object-cover" 
+                  priority
+                />
+              </button>
+              
+              {/* 每日公告弹窗 */}
+              {showNotice && (
+                <div 
+                  ref={noticeRef}
+                  className="absolute top-full right-0 mt-5 z-50 w-80 bg-white dark:bg-zinc-800 rounded-lg shadow-lg p-4 text-sm transform origin-top-right transition-all border border-gray-200 dark:border-0"
+                >
+                  {noticeLoading ? (
+                    <div className="flex justify-center py-3">
+                      <div className="animate-spin rounded-full h-5 w-5 border-t-2 border-b-2 border-primary"></div>
+                    </div>
+                  ) : noticeData ? (
+                    <div>
+                      <div className="flex items-center justify-between mb-2 text-xs text-gray-500 dark:text-gray-400">
+                        <i className="fa-solid fa-hippo text-primary text-2xl"></i>
+                        <span className="px-2 py-0.5 bg-blue-100 dark:bg-amber-500 text-blue-700 dark:text-amber-950 rounded">咸言嘢语</span>
+                        <span>{noticeData.date}</span>
+                        <i className="fa-brands fa-themeisle text-primary text-3xl"></i>
+                      </div>
+                      <p className="text-gray-800 dark:text-gray-200">{noticeData.content}</p>
+                    </div>
+                  ) : (
+                    <p className="text-center text-gray-500">暂无话说</p>
+                  )}
+                </div>
+              )}
+            </div>
             
             {/* 汉堡菜单按钮 */}
             <button 

@@ -368,4 +368,37 @@ export const serverFetch = async (path: string, options: RequestInit = {}) => {
     console.error('[服务端API] 请求失败:', error);
     throw error;
   }
-}; 
+};
+
+// 获取随机分享语录
+export async function getRandomQuote() {
+  try {
+    const response = await get('/api/quotes/random');
+    return response;
+  } catch (error) {
+    console.error('获取随机语录失败:', error);
+    return { success: false, error: '获取随机语录失败' };
+  }
+}
+
+// 获取每日公告
+export async function getDailyNotice() {
+  try {
+    const response = await get('/api/notice');
+    return response;
+  } catch (error) {
+    console.error('获取每日公告失败:', error);
+    return { success: false, error: '获取每日公告失败' };
+  }
+}
+
+// 更新每日公告
+export async function updateDailyNotice(content: string) {
+  try {
+    const response = await post('/api/notice', { content });
+    return response;
+  } catch (error) {
+    console.error('更新每日公告失败:', error);
+    return { success: false, error: '更新每日公告失败' };
+  }
+} 

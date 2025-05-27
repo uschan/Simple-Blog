@@ -441,12 +441,10 @@ export default function MediaPage() {
   return (
     <div className="container mx-auto max-w-6xl">
       {/* 页面标题和操作栏 */}
-      <div className="flex justify-between items-center mb-4">
-        <h1 className="text-xl font-semibold underline underline-offset-8 decoration-wavy">/// 媒体素材库 ///</h1>
-      
-        <div className="flex items-center gap-4">
-          <span className="text-sm text-text-light">共 {pagination.total} 个文件</span>
-          
+      <h1 className="text-xl font-semibold underline underline-offset-8 decoration-wavy mb-4">/// 媒体素材库 ///</h1>
+
+      <div className="flex justify-between items-center mb-4">      
+          <span className="text-sm text-text-light">共 {pagination.total} 个文件</span>          
           {mediaItems.length > 0 && (
             <div className="flex items-center space-x-2">
               <button 
@@ -472,8 +470,6 @@ export default function MediaPage() {
               )}
             </div>
           )}
-
-        </div>
       </div>
       
       {/* 加载和错误状态 */}

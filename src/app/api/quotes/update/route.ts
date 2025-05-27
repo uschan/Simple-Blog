@@ -1,39 +1,51 @@
-export const dynamic = 'force-dynamic';
-import { NextResponse } from 'next/server';
-import fs from 'fs';
+import { NextRequest, NextResponse } from 'next/server';
 import path from 'path';
+import fs from 'fs/promises';
 
-export async function POST(request: Request) {
+export async function POST(req: NextRequest) {
   try {
-    // 获取请求体
-    const body = await request.json();
+    // 从请求中获取数据
+    const data = await req.json();
     
-    // 验证数据格式
-    if (!body.quotes || !Array.isArray(body.quotes)) {
-      return NextResponse.json(
-        { error: '无效的数据格式' },
-        { status: 400 }
-      );
+    // 简单验证
+    if (!data.quotes || !Array.isArray(data.quotes)) {
+      return NextResponse.json({ 
+        success: false, 
+        error: 'JSON必须包含quotes数组' 
+      }, { status: 400 });
     }
     
-    // 设置文件路径
-    const filePath = path.join(process.cwd(), 'src/data/shareQuotes.json');
+    // 验证每条语录格式
+    for (const quote of data.quotes) {
+      if (!quote.id || !quote.text || !quote.author) {
+        return NextResponse.json({ 
+          success: false, 
+          error: '每条语录必须包含id、text和author字段' 
+        }, { status: 400 });
+      }
+    }
     
-    // 准备写入的数据
+    // 保存JSON文件
+    const jsonPath = path.join(process.cwd(), 'src/data/shareQuotes.json');
+    
+    // 添加最后更新时间
     const dataToSave = {
-      quotes: body.quotes,
+      ...data,
       lastUpdated: new Date().toISOString().split('T')[0]
     };
     
-    // 写入文件
-    fs.writeFileSync(filePath, JSON.stringify(dataToSave, null, 2), 'utf8');
+    await fs.writeFile(jsonPath, JSON.stringify(dataToSave, null, 2), 'utf8');
     
-    return NextResponse.json({ success: true });
+    return NextResponse.json({ 
+      success: true, 
+      message: '语录数据已更新' 
+    });
   } catch (error) {
-    console.error('保存语录失败:', error);
-    return NextResponse.json(
-      { error: '保存过程中出错' },
-      { status: 500 }
-    );
+    console.error('更新语录数据失败:', error);
+    
+    return NextResponse.json({ 
+      success: false, 
+      error: '更新语录数据失败' 
+    }, { status: 500 });
   }
 } 

@@ -126,6 +126,7 @@ export default function AdminLayout({
     { path: "/admin/media", name: "媒体素材", icon: "fa-images" },
     { path: "/admin/settings", name: "系统设置", icon: "fa-sliders" },
     { path: "/admin/quotes", name: "语录分享", icon: "fa-chart-simple" },
+    { path: "/admin/notice", name: "公告管理", icon: "fa-bullhorn" },
     // { path: "/admin/test-token", name: "令牌测试", icon: "fa-key" },
     { path: "/", name: "返回首页", icon: "fa-house" },
   ];

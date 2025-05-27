@@ -36,6 +36,51 @@ const formatDate = (dateString: string): string => {
   return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
 };
 
+// 文章卡片组件 - 用于渲染单个文章
+const ArticleCard = ({ article, className = '' }: { article: Article, className?: string }) => {
+  return (
+    <div className={`relative overflow-hidden rounded-lg ${className}`}>
+      {/* 文章图片 */}
+      <div className="relative w-full aspect-[4/3] overflow-hidden">
+        {(article.featuredImage || article.coverImage) ? (
+          <Link href={`/article/${article.slug}`}>
+            <OptimizedImage
+              src={convertToApiImageUrl(article.featuredImage || article.coverImage || '')}
+              alt={article.title}
+              width={1200}
+              height={675}
+              className="w-full h-full object-cover transition-transform duration-300 hover:scale-105"
+              imageFormat="webp"
+              quality={90}
+            />
+          </Link>
+        ) : (
+          <div className="w-full h-full bg-gradient-to-b from-gray-200 to-gray-600 flex items-center justify-center">
+            <i className="fas fa-image text-white text-4xl"></i>
+          </div>
+        )}
+      </div>
+      
+      {/* 内容叠加层 */}
+      <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent flex flex-col justify-end p-3 sm:p-4 lg:p-5">
+        <div className="flex flex-wrap gap-2 mb-2">
+          {article.categories?.map(cat => (
+            <span key={cat._id} className="bg-primary/90 text-white text-xs px-2 py-1 rounded-full border border-white/20 shadow-md backdrop-blur-sm">
+              {cat.name}
+            </span>
+          ))}
+        </div>
+        
+        <Link href={`/article/${article.slug}`} className="group">
+          <h2 className="text-white text-lg sm:text-xl lg:text-2xl font-medium mb-1 line-clamp-2 transition-colors">
+            {article.title}
+          </h2>
+        </Link>
+      </div>
+    </div>
+  );
+};
+
 export default function HeroSlider({ articles }: HeroSliderProps) {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isLoaded, setIsLoaded] = useState(false);
@@ -89,75 +134,47 @@ export default function HeroSlider({ articles }: HeroSliderProps) {
   
   if (safeArticles.length === 0) {
     return (
-      <div className="relative w-full h-96 bg-gradient-to-b from-gray-300 to-gray-500 rounded-lg overflow-hidden flex items-center justify-center">
+      <div className="relative w-full h-auto bg-gradient-to-b from-gray-300 to-gray-500 rounded-lg overflow-hidden flex items-center justify-center py-20">
         <p className="text-white text-xl">暂无轮播文章</p>
       </div>
     );
   }
   
   const currentArticle = safeArticles[currentIndex];
+  // 获取下一个要显示的文章索引（用于双联模式）
+  const nextArticleIndex = (currentIndex + 1) % safeArticles.length;
   
   return (
     <div 
-      className="relative w-full h-96 bg-gradient-to-b from-gray-300 to-gray-500 rounded-lg overflow-hidden group"
+      className="relative w-full h-auto bg-gradient-to-b from-gray-300 to-gray-500 rounded-lg overflow-hidden group"
       onTouchStart={handleTouchStart}
       onTouchEnd={handleTouchEnd}
     >
-      {/* 文章图片 */}
-      <div className="relative h-full overflow-hidden">
-      {(currentArticle.featuredImage || currentArticle.coverImage) ? (
-        <Link href={`/article/${currentArticle.slug}`}>
-        <OptimizedImage
-          src={convertToApiImageUrl(currentArticle.featuredImage || currentArticle.coverImage || '')}
-          alt={currentArticle.title}
-          fill
-              className="object-cover transition-transform duration-300"
-          priority
-          onLoad={() => setIsLoaded(true)}
-              optimizeImage={true}
-              imageFormat="webp"
-              quality={85}
-        />
-        </Link>
-      ) : (
-        <div className="w-full h-full bg-gradient-to-b from-gray-200 to-gray-600 flex items-center justify-center">
-          <i className="fas fa-image text-white text-4xl"></i>
-        </div>
-      )}
+      {/* 响应式轮播 - 移动端单联，电脑端双联 */}
+      <div className="block lg:hidden">
+        {/* 移动端单联轮播 */}
+        <ArticleCard article={currentArticle} />
       </div>
       
-      {/* 内容叠加层 */}
-      <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent flex flex-col justify-end p-6">
-        <div className="flex gap-2 mb-2">
-          {currentArticle.categories?.map(cat => (
-            <span key={cat._id} className="bg-primary/90 text-white text-xs px-3 py-1.5 rounded-full border border-white/20 shadow-md backdrop-blur-sm">
-              {cat.name}
-            </span>
-          ))}
-        </div>
-        
-        <Link href={`/article/${currentArticle.slug}`} className="group">
-          <h2 className="text-white text-2xl md:text-3xl font-medium mb-2 transition-colors">
-            {currentArticle.title}
-          </h2>
-        </Link>
-        
-        <p className="text-white/80 mb-4 max-w-2xl">
-          {currentArticle.excerpt || currentArticle.summary}
-        </p>
+      <div className="hidden lg:flex lg:flex-row space-x-4">
+        {/* 电脑端双联轮播 */}
+        <ArticleCard article={currentArticle} className="w-[calc(50%-8px)]" />
+        {safeArticles.length > 1 && (
+          <ArticleCard article={safeArticles[nextArticleIndex]} className="w-[calc(50%-8px)]" />
+        )}
       </div>
       
-      {/* 图片数量指示器 */}
+      {/* 图片数量指示器 - 只在移动端显示 */}
       {isLoaded && safeArticles.length > 1 && (
-        <div className="absolute top-4 right-4 bg-black/60 backdrop-blur-md text-white text-xs font-medium px-3 py-1.5 rounded-full border border-white/20 shadow-lg flex items-center space-x-1.5 z-20">
+        <div className="lg:hidden absolute top-4 right-4 bg-black/60 backdrop-blur-md text-white text-xs font-medium px-3 py-1.5 rounded-full border border-white/20 shadow-lg flex items-center space-x-1.5 z-20">
           <i className="fas fa-images"></i>
           <span>{currentIndex + 1}/{safeArticles.length}</span>
         </div>
       )}
       
-      {/* 轮播指示器 - 只在加载完成后显示 */}
+      {/* 轮播指示器 - 只在加载完成后和移动端显示 */}
       {isLoaded && safeArticles.length > 1 && (
-        <div className="absolute bottom-4 left-0 right-0 flex justify-center">
+        <div className="lg:hidden absolute bottom-4 left-0 right-0 flex justify-center">
           <div className="px-3 py-1.5 bg-black/40 backdrop-blur-sm rounded-full flex items-center space-x-2">
             {safeArticles.map((_, idx) => (
               <button 
@@ -175,7 +192,7 @@ export default function HeroSlider({ articles }: HeroSliderProps) {
         </div>
       )}
       
-      {/* 左右箭头 - 只在加载完成后显示 */}
+      {/* 左右箭头 - 只在加载完成后显示，在电脑端和移动端都显示，但电脑端切换两张 */}
       {isLoaded && safeArticles.length > 1 && (
         <>
           <button 

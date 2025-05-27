@@ -2,6 +2,7 @@
 import "@/styles/globals.css";
 import type { Metadata } from "next";
 import { Raleway } from "next/font/google";
+import AnalyticsScript from "@/components/analytics/AnalyticsScript";
 import Script from "next/script";
 import { getSettings } from "@/lib/api/settings";
 import ClientRootLayout from "./ClientRootLayout";
@@ -83,14 +84,9 @@ export default async function RootLayout({
   // 将MongoDB对象转换为普通JavaScript对象
   const categories = JSON.parse(JSON.stringify(categoriesData));
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000';
-  
-  // 获取统计代码 (这里我们提前获取并解析)
-  const analyticsCode = settings.analytics?.trackingCode || '';
-  const googleAnalyticsId = analyticsCode.match(/['"](G-[A-Z0-9]+)['"]/)?.[1] || '';
-  const umamiWebsiteId = analyticsCode.match(/data-website-id="([^"]+)"/)?.[1] || '';
 
   return (
-    <html lang="zh-CN" className="light" suppressHydrationWarning>
+    <html lang="zh-CN" className="light">
       <head>
         <link rel="icon" href={settings.favicon} />
         <link rel="stylesheet" href="/css/emoji-reactions.css" />
@@ -100,6 +96,7 @@ export default async function RootLayout({
           title={`${settings.siteName} RSS Feed`}
           href={`${siteUrl}/api/rss`}
         />
+        <AnalyticsScript />
         {/* 标准方式加载Font Awesome CSS */}
         <link 
           rel="stylesheet"
@@ -109,6 +106,8 @@ export default async function RootLayout({
       <body
         className={`${raleway.variable} bg-bg text-text min-h-screen flex flex-col transition-colors duration-200`}
       >
+        {/* 移除Font Awesome JS版本，只保留CSS版本避免冲突 */}
+        
         {/* 这里挂 Client 组件，传入 settings */}
         {/* 服务端组件传递给客户端组件 */}
         <ClientRootLayout 
@@ -133,37 +132,6 @@ export default async function RootLayout({
           src="/components/EmojiReaction.js"
           strategy="afterInteractive"
         />
-        
-        {/* Umami统计 */}
-        {umamiWebsiteId && (
-          <Script
-            id="umami-analytics"
-            src="https://cloud.umami.is/script.js"
-            data-website-id={umamiWebsiteId}
-            strategy="afterInteractive"
-            defer
-          />
-        )}
-        
-        {/* Google Analytics统计 */}
-        {googleAnalyticsId && (
-          <>
-            <Script
-              id="google-analytics-tag"
-              src={`https://www.googletagmanager.com/gtag/js?id=${googleAnalyticsId}`}
-              strategy="afterInteractive"
-              async
-            />
-            <Script id="google-analytics-config" strategy="afterInteractive">
-              {`
-                window.dataLayer = window.dataLayer || [];
-                function gtag(){dataLayer.push(arguments);}
-                gtag('js', new Date());
-                gtag('config', '${googleAnalyticsId}');
-              `}
-            </Script>
-          </>
-        )}
       </body>
     </html>
   );

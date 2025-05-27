@@ -7,11 +7,6 @@ import { get, post } from "@/lib/api"; // 导入API工具
 import { convertToApiImageUrl } from "@/lib/utils"; // 添加导入
 import dynamic from 'next/dynamic';
 
-// 动态加载调试组件，使其仅在客户端渲染
-const AnalyticsDebug = dynamic(() => import('./AnalyticsDebug'), {
-  ssr: false
-});
-
 // 使用完全相同的导入方式，确保与文章页面一致
 const FileUploader = dynamic(() => import('@/components/admin/FileUploader'), { 
   ssr: false,
@@ -177,51 +172,26 @@ export default function SettingsPage() {
     
     setIsSaving(true);
     try {
-      // 创建要发送的数据副本
+      // 创建要发送的数据副本，确保统计代码使用正确的字段名
       const dataToSave = {
         ...settings,
-        // 确保统计代码被正确保存
-        analyticsCode: settings.analyticsCode || ''
+        // 明确添加分析代码字段，确保使用正确的字段名
+        analytics: {
+          type: 'custom',
+          trackingCode: settings.analyticsCode || ''
+        }
       };
+      
+      console.log('保存设置数据:', JSON.stringify(dataToSave));
       
       // 发送数据到服务器
       const response = await post('/api/admin/settings', dataToSave);
       
-      // 强制刷新设置API缓存 - 调用settings API强制更新
-      try {
-        await fetch(`/api/settings?refresh=true&t=${new Date().getTime()}`, {
-          headers: {
-            'Cache-Control': 'no-cache, no-store, must-revalidate',
-            'Pragma': 'no-cache',
-            'Expires': '0'
-          }
-        });
-        
-        // 如果在同一域名下，可以尝试刷新分析脚本
-        if (typeof window !== 'undefined') {
-          console.log('尝试刷新统计脚本...');
-          
-          // 移除旧的统计脚本
-          const oldScript = document.getElementById('analytics-script');
-          if (oldScript) {
-            oldScript.remove();
-            console.log('已移除旧的统计脚本');
-          }
-          
-          // 等待100ms后重新加载页面，让新设置生效
-          setTimeout(() => {
-            window.location.reload();
-          }, 1000);
-        }
-      } catch (refreshError) {
-        console.error('刷新设置缓存失败:', refreshError);
-      }
-      
       // 显示成功消息
-      setSuccessMessage('设置已成功保存！统计代码将在页面刷新后生效。');
+      setSuccessMessage('设置已成功保存！');
       setTimeout(() => setSuccessMessage(''), 3000);
       
-      // 强制重新加载数据
+      // 强制重新加载数据，添加时间戳防止缓存
       await loadSettings();
     } catch (error) {
       alert(`保存设置失败: ${error instanceof Error ? error.message : '未知错误'}`);
@@ -490,9 +460,7 @@ export default function SettingsPage() {
         </div>
         <div className="bg-gray-100 dark:bg-zinc-800 rounded-lg p-4">               
             {/* 统计代码 */}
-            <div className="mb-4">
-              <h2 className="block text-sm dark:text-blue-500 font-medium mb-2">⋙⋙◜网站统计◝</h2>
-            
+            <div className="mb-4">          
               <div>
                 <label className="block text-sm dark:text-blue-500 font-medium mb-2">⋙⋙◜统计代码◝</label>
                 <div className="mb-2 text-xs text-gray-600 dark:text-gray-400 italic">
@@ -519,9 +487,6 @@ export default function SettingsPage() {
   gtag('config', 'G-XXXXXXXX');
 </script>"
                 ></textarea>
-                
-                {/* 添加统计代码调试组件 */}
-                <AnalyticsDebug />
               </div>
             </div>
         </div>

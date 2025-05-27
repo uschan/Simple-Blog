@@ -182,8 +182,38 @@ export default function SettingsPage() {
       // 发送数据到服务器
       const response = await post('/api/admin/settings', dataToSave);
       
+      // 强制刷新设置API缓存 - 调用settings API强制更新
+      try {
+        await fetch(`/api/settings?refresh=true&t=${new Date().getTime()}`, {
+          headers: {
+            'Cache-Control': 'no-cache, no-store, must-revalidate',
+            'Pragma': 'no-cache',
+            'Expires': '0'
+          }
+        });
+        
+        // 如果在同一域名下，可以尝试刷新分析脚本
+        if (typeof window !== 'undefined') {
+          console.log('尝试刷新统计脚本...');
+          
+          // 移除旧的统计脚本
+          const oldScript = document.getElementById('analytics-script');
+          if (oldScript) {
+            oldScript.remove();
+            console.log('已移除旧的统计脚本');
+          }
+          
+          // 等待100ms后重新加载页面，让新设置生效
+          setTimeout(() => {
+            window.location.reload();
+          }, 1000);
+        }
+      } catch (refreshError) {
+        console.error('刷新设置缓存失败:', refreshError);
+      }
+      
       // 显示成功消息
-      setSuccessMessage('设置已成功保存！');
+      setSuccessMessage('设置已成功保存！统计代码将在页面刷新后生效。');
       setTimeout(() => setSuccessMessage(''), 3000);
       
       // 强制重新加载数据

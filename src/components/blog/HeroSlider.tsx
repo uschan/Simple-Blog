@@ -134,7 +134,7 @@ export default function HeroSlider({ articles }: HeroSliderProps) {
   
   if (safeArticles.length === 0) {
     return (
-      <div className="relative w-full h-auto bg-gradient-to-b from-gray-300 to-gray-500 rounded-lg overflow-hidden flex items-center justify-center py-20">
+      <div className="relative w-full h-auto rounded-lg overflow-hidden flex items-center justify-center py-20">
         <p className="text-white text-xl">暂无轮播文章</p>
       </div>
     );
@@ -146,7 +146,7 @@ export default function HeroSlider({ articles }: HeroSliderProps) {
   
   return (
     <div 
-      className="relative w-full h-auto bg-gradient-to-b from-gray-300 to-gray-500 rounded-lg overflow-hidden group"
+      className="relative w-full h-auto rounded-lg overflow-hidden group"
       onTouchStart={handleTouchStart}
       onTouchEnd={handleTouchEnd}
     >

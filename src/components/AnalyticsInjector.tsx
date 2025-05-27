@@ -1,23 +1,36 @@
 // components/AnalyticsInjector.tsx
 'use client'
-import Script from 'next/script'
+import { useEffect } from 'react'
 
 interface AnalyticsInjectorProps {
   trackingCode: string
 }
 
 export default function AnalyticsInjector({ trackingCode }: AnalyticsInjectorProps) {
-  if (!trackingCode) return null
-  
-  // 创建一个唯一ID以避免冲突
-  const scriptId = `analytics-script-${Math.random().toString(36).substring(2, 9)}`
-  
-  // 使用Next.js的Script组件而不是手动操作DOM
-  return (
-    <Script
-      id={scriptId}
-      dangerouslySetInnerHTML={{ __html: trackingCode }}
-      strategy="afterInteractive"
-    />
-  )
+  useEffect(() => {
+    if (!trackingCode) return
+
+    const container = document.createElement('div')
+    container.innerHTML = trackingCode
+    
+    const scripts = container.querySelectorAll('script')
+    
+    scripts.forEach(originalScript => {
+      const newScript = document.createElement('script')
+      
+      Array.from(originalScript.attributes).forEach(attr => {
+        newScript.setAttribute(attr.name, attr.value)
+      })
+      
+      if (originalScript.src) {
+        newScript.src = originalScript.src
+      } else if (originalScript.textContent) {
+        newScript.textContent = originalScript.textContent
+      }
+      
+      document.body.appendChild(newScript)
+    })
+  }, [trackingCode])
+
+  return null
 }

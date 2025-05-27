@@ -453,7 +453,7 @@ export default async function ArticlePage({ params }: { params: Promise<{ slug: 
       // 默认图片封面
       coverSection = article.coverImage ? (
         <div className="relative">
-          <Image
+          <OptimizedImage 
             src={convertToApiImageUrl(article.coverImage)} 
             alt={article.title}
             width={0}
@@ -536,11 +536,22 @@ export default async function ArticlePage({ params }: { params: Promise<{ slug: 
         </div>
         
                 {/* 摘要区替代为文章内容区 */}
-                <div className="mb-6">
+                <div className="mb-4">
         <div 
                     className="article-content prose max-w-none"
                     dangerouslySetInnerHTML={{ __html: parseEditorContent(article.content, article.summary, (article as any).excerpt) }}
         />
+                </div>
+                
+                {/* 版权说明区域 */}
+                <div className="mb-6 py-3 px-4 border-l-4 border-primary bg-gray-50 dark:bg-gray-800 text-sm rounded">
+                  <div className="flex items-center mb-1 font-medium text-primary">
+                  <i className="fa-regular fa-copyright mr-2"></i>
+                    <span>版权声明</span>
+                  </div>
+                  <p className="text-xs text-gray-700 dark:text-gray-300">
+                    本文为「{article.author?.name}」原创内容，图片个人摄影 / 手绘 / AIGC，后期 PhotoMator / Procreate，版权归「{article.author?.name}」所有。<span className="text-red-500">未经授权，禁止用于商业用途，禁止抹除水印，禁止转发至小红书等平台。</span>转载请注明出处与链接并保留本声明。
+                  </p>
                 </div>
         
                 {/* 分享和互动区域 */}

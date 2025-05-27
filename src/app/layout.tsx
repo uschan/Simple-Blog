@@ -8,6 +8,7 @@ import ClientRootLayout from "./ClientRootLayout";
 import { Toaster } from 'react-hot-toast'
 import { Category } from "@/models";
 import connectDB from "@/lib/db";
+import AnalyticsInjector from '@/components/AnalyticsInjector'
 
 // 载入 Google Font
 const raleway = Raleway({
@@ -101,14 +102,7 @@ export default async function RootLayout({
           href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css"
         />
         
-        {/* 从后台设置注入统计代码 - 直接使用dangerouslySetInnerHTML */}
-        {settings.analytics.trackingCode && (
-          <Script
-            id="analytics-code"
-            dangerouslySetInnerHTML={{ __html: settings.analytics.trackingCode }}
-            strategy="afterInteractive"
-          />
-        )}
+
       </head>
       <body
         className={`${raleway.variable} bg-bg text-text min-h-screen flex flex-col transition-colors duration-200`}
@@ -139,6 +133,12 @@ export default async function RootLayout({
           src="/components/EmojiReaction.js"
           strategy="afterInteractive"
         />
+        {/* 从后台设置注入统计代码 - 直接使用dangerouslySetInnerHTML */}
+        {children}
+        
+        {settings.analytics.trackingCode && (
+          <AnalyticsInjector trackingCode={settings.analytics.trackingCode} />
+        )}     
       </body>
     </html>
   );

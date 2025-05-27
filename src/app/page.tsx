@@ -200,7 +200,7 @@ export default async function Home() {
               <div key={article._id} className="text-sm bg-bg-card rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-shadow border border-gray-200">
               <div className="relative">
                   {/* 固定比例的图片容器 */}
-                  <div className="relative h-[220px]" style={{ position: 'relative' }}>
+                  <div className="relative h-[200px]" style={{ position: 'relative' }}>
                     <Link href={`/article/${article.slug}`}>
                     <OptimizedImage 
                       src={article.featuredImage || article.coverImage 

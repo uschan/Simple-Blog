@@ -25,7 +25,7 @@ export interface SiteSettings {
         icon: string;
     }>;
     analytics: {
-        type: 'google' | 'umami'; // 假设类型是这两种之一
+        type: 'google' | 'umami' | 'custom';
         trackingCode: string;
     };
 }
@@ -88,10 +88,14 @@ export const getSettings = cache(async (): Promise<SiteSettings> => {
              // 或者，如果解析失败时不希望显示任何社交媒体，可以使用 socials = [];
         }
 
+        // 获取分析代码类型和值
+        const analyticsType = settingsObj[STANDARD_FIELD_NAMES.ANALYTICS_TYPE] || 'custom';
+        let analyticsCode = settingsObj[STANDARD_FIELD_NAMES.ANALYTICS_CODE] || '';
+        
         // 构建并返回公开可访问的网站设置对象
         // 从 settingsObj 中获取值，如果某个 key 不存在或值为 falsy，则使用硬编码的默认值
         const publicSettings: SiteSettings = {
-            siteName: settingsObj[STANDARD_FIELD_NAMES.SITE_NAME] || '野盐', // 例如，如果 siteName 在数据库中不存在或为空，则使用 '野盐'
+            siteName: settingsObj[STANDARD_FIELD_NAMES.SITE_NAME] || '野盐', 
             siteDescription: settingsObj[STANDARD_FIELD_NAMES.SITE_DESCRIPTION] || '',
             siteKeywords: settingsObj[STANDARD_FIELD_NAMES.SITE_KEYWORDS] || '',
             logo: settingsObj[STANDARD_FIELD_NAMES.LOGO] || '/images/logo.svg',
@@ -101,8 +105,8 @@ export const getSettings = cache(async (): Promise<SiteSettings> => {
             socials, // 使用上面解析或默认的社交媒体数据
             analytics: {
                 // 安全获取分析类型和代码，并提供默认值
-                type: (settingsObj[STANDARD_FIELD_NAMES.ANALYTICS_TYPE] as 'google' | 'umami' | undefined) || 'google', // 类型断言并提供默认值
-                trackingCode: settingsObj[STANDARD_FIELD_NAMES.ANALYTICS_CODE] || ''
+                type: analyticsType as 'google' | 'umami' | 'custom', 
+                trackingCode: analyticsCode
             }
         };
 

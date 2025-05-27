@@ -8,8 +8,17 @@ import Footer from "@/components/shared/Footer";
 import Script from "next/script";
 
 interface Settings {
+  siteName?: string;
+  siteDescription?: string;
+  siteKeywords?: string;
+  logo?: string;
+  favicon?: string;
   copyright?: string;
   socials?: any[];
+  analytics?: {
+    type: 'google' | 'umami' | 'custom';
+    trackingCode: string;
+  };
 }
 
 interface Category {

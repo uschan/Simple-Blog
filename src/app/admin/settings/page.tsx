@@ -84,8 +84,13 @@ interface SiteSettings {
     icon: string;
   }>;
   
-  // 统计代码 (直接存储完整代码)
-  analyticsCode: string;
+  // 统计代码 - 新格式
+  analytics: {
+    type: 'google' | 'umami' | 'custom';
+    trackingCode: string;
+  };
+  // 向后兼容原来的格式
+  analyticsCode?: string;
 }
 
 // 系统设置页面组件
@@ -128,8 +133,19 @@ export default function SettingsPage() {
           socials = [];
         }
         
-        // 直接使用analyticsCode字段
-        const analyticsCode = data.analyticsCode || '';
+        // 处理分析代码，优先使用新格式，兼容旧格式
+        let analyticsType = 'custom';
+        let analyticsCode = '';
+        
+        if (data.analytics) {
+          // 使用新格式
+          analyticsType = data.analytics.type || 'custom';
+          analyticsCode = data.analytics.trackingCode || '';
+        } else if (data.analyticsCode) {
+          // 兼容旧格式
+          analyticsType = 'custom';
+          analyticsCode = data.analyticsCode;
+        }
         
         // 构建格式化的设置数据
         const formattedSettings: SiteSettings = {
@@ -140,7 +156,10 @@ export default function SettingsPage() {
           favicon: data.favicon || '/images/favicon.ico',
           copyright: data.copyright || '',
           socials: socials,
-          analyticsCode: analyticsCode
+          analytics: {
+            type: analyticsType as 'google' | 'umami' | 'custom',
+            trackingCode: analyticsCode
+          }
         };
         
         // 更新状态
@@ -172,17 +191,15 @@ export default function SettingsPage() {
     
     setIsSaving(true);
     try {
-      // 创建要发送的数据副本，确保统计代码使用正确的字段名
+      // 确保正确的数据格式
       const dataToSave = {
         ...settings,
-        // 明确添加分析代码字段，确保使用正确的字段名
+        // 确保分析代码使用正确的格式
         analytics: {
-          type: 'custom',
-          trackingCode: settings.analyticsCode || ''
+          type: settings.analytics?.type || 'custom',
+          trackingCode: settings.analytics?.trackingCode || settings.analyticsCode || ''
         }
       };
-      
-      console.log('保存设置数据:', JSON.stringify(dataToSave));
       
       // 发送数据到服务器
       const response = await post('/api/admin/settings', dataToSave);
@@ -463,29 +480,51 @@ export default function SettingsPage() {
             <div className="mb-4">          
               <div>
                 <label className="block text-sm dark:text-blue-500 font-medium mb-2">⋙⋙◜统计代码◝</label>
+                <div className="mb-2">
+                  <select
+                    value={settings.analytics?.type || 'custom'}
+                    onChange={(e) => setSettings({
+                      ...settings,
+                      analytics: {
+                        ...settings.analytics,
+                        type: e.target.value as 'google' | 'umami' | 'custom'
+                      }
+                    })}
+                    className="w-full mb-3 text-xs px-4 py-2 rounded-lg bg-bg dark:bg-zinc-900 border border-gray-200 dark:border-0"
+                  >
+                    <option value="google">Google Analytics</option>
+                    <option value="umami">Umami Analytics</option>
+                    <option value="custom">自定义代码</option>
+                  </select>
+                </div>
                 <div className="mb-2 text-xs text-gray-600 dark:text-gray-400 italic">
-                  请直接粘贴完整的统计代码，支持同时添加多个统计服务（如Google Analytics、百度统计、Umami等）
+                  {settings.analytics?.type === 'google' ? (
+                    "请输入Google Analytics的测量ID (例如: G-XXXXXXXXXX)"
+                  ) : settings.analytics?.type === 'umami' ? (
+                    "请输入Umami的网站ID"
+                  ) : (
+                    "请直接粘贴完整的统计代码，支持同时添加多个统计服务"
+                  )}
                 </div>
                 <textarea 
-                  value={settings.analyticsCode || ''}
+                  value={settings.analytics?.trackingCode || ''}
                   onChange={(e) => {
                     setSettings({
                       ...settings,
-                      analyticsCode: e.target.value
+                      analytics: {
+                        ...settings.analytics,
+                        trackingCode: e.target.value
+                      }
                     });
                   }}
                   className="w-full text-xs italic px-4 py-2 rounded-lg bg-bg dark:bg-zinc-900 border border-gray-200 dark:border-0" 
                   rows={8}
-                  placeholder="<!-- 示例：在此粘贴您的完整统计代码 -->
-<script defer src='https://static.cloudflareinsights.com/beacon.min.js'></script>
-<!-- Google tag (gtag.js) -->
-<script async src='https://www.googletagmanager.com/gtag/js?id=G-XXXXXXXX'></script>
-<script>
-  window.dataLayer = window.dataLayer || [];
-  function gtag(){dataLayer.push(arguments);}
-  gtag('js', new Date());
-  gtag('config', 'G-XXXXXXXX');
-</script>"
+                  placeholder={settings.analytics?.type === 'google' ? 
+                    "G-XXXXXXXXXX" : 
+                    settings.analytics?.type === 'umami' ? 
+                    "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" :
+                    "<!-- 示例：在此粘贴您的完整统计代码 -->"
+                  }
                 ></textarea>
               </div>
             </div>

@@ -53,7 +53,13 @@ export async function GET(request: NextRequest) {
       }
     }
     
-    // 直接为前端添加字段，确保透明传递
+    // 为前端构建格式化的analytics对象
+    settingsObj.analytics = JSON.stringify({
+      type: settingsObj[STANDARD_FIELD_NAMES.ANALYTICS_TYPE] || 'custom',
+      trackingCode: settingsObj[STANDARD_FIELD_NAMES.ANALYTICS_CODE] || ''
+    });
+    
+    // 向后兼容性支持
     settingsObj.analyticsCode = settingsObj[STANDARD_FIELD_NAMES.ANALYTICS_CODE] || '';
     
     return NextResponse.json({ 
@@ -85,17 +91,28 @@ export async function POST(request: NextRequest) {
     }
     
     // 专门处理统计代码字段
-    if (settings.analytics && settings.analytics.trackingCode) {
-      console.log('收到统计代码更新:', settings.analytics.trackingCode.substring(0, 50) + '...');
-      // 直接更新统计代码字段
-      await Setting.findOneAndUpdate(
-        { key: STANDARD_FIELD_NAMES.ANALYTICS_CODE },
-        { value: settings.analytics.trackingCode },
-        { upsert: true, new: true }
-      );
-    } else if (settings.analyticsCode) {
+    if (settings.analytics) {
+      // 更新统计类型
+      if (settings.analytics.type) {
+        await Setting.findOneAndUpdate(
+          { key: STANDARD_FIELD_NAMES.ANALYTICS_TYPE },
+          { value: settings.analytics.type },
+          { upsert: true, new: true }
+        );
+      }
+      
+      // 更新统计代码
+      if (settings.analytics.trackingCode !== undefined) {
+        console.log('收到统计代码更新:', settings.analytics.trackingCode.substring(0, 50) + '...');
+        await Setting.findOneAndUpdate(
+          { key: STANDARD_FIELD_NAMES.ANALYTICS_CODE },
+          { value: settings.analytics.trackingCode },
+          { upsert: true, new: true }
+        );
+      }
+    } else if (settings.analyticsCode !== undefined) {
+      // 向后兼容 - 如果使用老字段也处理
       console.log('收到analyticsCode字段更新:', settings.analyticsCode.substring(0, 50) + '...');
-      // 如果使用老字段也处理
       await Setting.findOneAndUpdate(
         { key: STANDARD_FIELD_NAMES.ANALYTICS_CODE },
         { value: settings.analyticsCode },
@@ -115,7 +132,7 @@ export async function POST(request: NextRequest) {
     for (const [key, value] of Object.entries(flattenSettings)) {
       try {
         // 跳过analytics相关字段，已单独处理
-        if (key === 'analytics.trackingCode' || key === 'analyticsCode') {
+        if (key === 'analytics.type' || key === 'analytics.trackingCode' || key === 'analyticsCode') {
           continue;
         }
         

@@ -18,6 +18,9 @@ export async function GET(request: NextRequest) {
       settingsObj[setting.key] = setting.value;
     });
     
+    // 打印获取到的统计代码，便于调试
+    console.log('获取到的统计代码字段:', settingsObj[STANDARD_FIELD_NAMES.ANALYTICS_CODE]?.substring(0, 50) + '...');
+    
     // 如果没有设置项，初始化默认设置
     if (settings.length === 0) {
       const defaultSettings = {
@@ -50,6 +53,9 @@ export async function GET(request: NextRequest) {
       }
     }
     
+    // 直接为前端添加字段，确保透明传递
+    settingsObj.analyticsCode = settingsObj[STANDARD_FIELD_NAMES.ANALYTICS_CODE] || '';
+    
     return NextResponse.json({ 
       message: 'Success',
       data: settingsObj
@@ -78,23 +84,47 @@ export async function POST(request: NextRequest) {
       );
     }
     
+    // 专门处理统计代码字段
+    if (settings.analytics && settings.analytics.trackingCode) {
+      console.log('收到统计代码更新:', settings.analytics.trackingCode.substring(0, 50) + '...');
+      // 直接更新统计代码字段
+      await Setting.findOneAndUpdate(
+        { key: STANDARD_FIELD_NAMES.ANALYTICS_CODE },
+        { value: settings.analytics.trackingCode },
+        { upsert: true, new: true }
+      );
+    } else if (settings.analyticsCode) {
+      console.log('收到analyticsCode字段更新:', settings.analyticsCode.substring(0, 50) + '...');
+      // 如果使用老字段也处理
+      await Setting.findOneAndUpdate(
+        { key: STANDARD_FIELD_NAMES.ANALYTICS_CODE },
+        { value: settings.analyticsCode },
+        { upsert: true, new: true }
+      );
+    }
+    
     // 更新数据库中的设置
     const updateResults = [];
     
     // 扁平化设置对象
     const flattenSettings = flattenObject(settings);
     
-    console.log('扁平化后的设置:', flattenSettings);
+    console.log('扁平化后的设置:', Object.keys(flattenSettings));
     
     // 遍历并保存所有设置
     for (const [key, value] of Object.entries(flattenSettings)) {
       try {
-      const result = await Setting.findOneAndUpdate(
-        { key },
-        { value: String(value) },
-        { upsert: true, new: true }
-      );
-      updateResults.push(result);
+        // 跳过analytics相关字段，已单独处理
+        if (key === 'analytics.trackingCode' || key === 'analyticsCode') {
+          continue;
+        }
+        
+        const result = await Setting.findOneAndUpdate(
+          { key },
+          { value: String(value) },
+          { upsert: true, new: true }
+        );
+        updateResults.push(result);
       } catch (err) {
         console.error(`保存设置 ${key} 失败:`, err);
         // 继续处理其他设置，不中断整个过程

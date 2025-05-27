@@ -28,6 +28,12 @@ export async function GET(request: NextRequest) {
       console.error('解析社交媒体数据失败:', e);
     }
     
+    // 直接获取统计代码，不经过任何处理
+    const analyticsCode = settingsObj[STANDARD_FIELD_NAMES.ANALYTICS_CODE] || '';
+    
+    // 记录调试信息
+    console.log('前台获取统计代码:', analyticsCode.substring(0, 50) + '...');
+    
     // 构建公开可访问的设置对象
     const publicSettings = {
       siteName: settingsObj[STANDARD_FIELD_NAMES.SITE_NAME] || '野盐',
@@ -37,10 +43,8 @@ export async function GET(request: NextRequest) {
       favicon: settingsObj[STANDARD_FIELD_NAMES.FAVICON] || '/images/favicon.ico',
       copyright: settingsObj[STANDARD_FIELD_NAMES.COPYRIGHT] || '© 2023-2025 野盐. 保留所有权利。',
       socials,
-      analytics: {
-        type: settingsObj[STANDARD_FIELD_NAMES.ANALYTICS_TYPE] || 'google',
-        trackingCode: settingsObj[STANDARD_FIELD_NAMES.ANALYTICS_CODE] || ''
-      }
+      // 直接提供原始统计代码，不做任何格式变换
+      analyticsCode: analyticsCode
     };
     
     return NextResponse.json({ 

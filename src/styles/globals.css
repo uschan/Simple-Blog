@@ -38,7 +38,7 @@ body .article-content code, .article-content pre {
 }
 
 /* 为所有卡片项添加边框颜色 */
-.dark .article-card.border {
+.dark .pinterest-item.border {
   border-color: oklch(0.24 0 0);
 }
 
@@ -194,7 +194,9 @@ body .article-content code, .article-content pre {
     @apply bg-bg-card rounded-lg shadow p-4;
   }
   
-  /* Pinterest风格瀑布流布局 - 行优先瀑布流 */
+  /* Pinterest风格瀑布流布局 */
+
+
 
   .container {
     width: 100%;
@@ -239,93 +241,55 @@ body .article-content code, .article-content pre {
   max-width: 80rem;
 }
 
-  /* 行优先瀑布流布局 - 使用Masonry */
-  .masonry-container {
+  .pinterest-grid {
+    column-count: 1;
+    column-gap: 1.5rem;
     width: 100%;
-    margin: 0 auto;
   }
   
-  /* 网格尺寸元素 - 用于定义列宽 */
-  .grid-sizer,
-  .grid-item {
-    width: 100%;
-    padding: 0;
-    box-sizing: border-box;
-  }
-  
-  /* 卡片样式 */
-  .article-card {
-    margin-bottom: 1.5rem;
-    height: auto;
-    display: flex;
-    flex-direction: column;
-  }
-  
-  /* 移除固定比例限制，让图片保持自然尺寸 */
-  .article-card .relative img,
-  .article-card .relative video {
-    width: 100%;
-    height: auto;
-    max-height: none;
-    object-fit: cover;
-  }
-  
-  /* 确保图片容器不会限制高度 */
-  .article-card .relative {
-    width: 100%;
-    height: auto;
-  }
-  
-  /* 响应式布局 */
+
+
   @media (min-width: 640px) {
-    .grid-sizer,
-    .grid-item {
-      width: 50%;
-      padding: 0 0.75rem;
+    .pinterest-grid {
+      column-count: 2;
     }
   }
-  
+
   @media (min-width: 768px) {
-    .grid-sizer,
-    .grid-item {
-      width: 33.333333%;
-      padding: 0 0.75rem;
+    .pinterest-grid {
+      column-count: 3;
     }
   }
-  
+    
   @media (min-width: 1024px) {
-    .grid-sizer,
-    .grid-item {
-      width: 25%;
-      padding: 0 0.75rem;
+    .pinterest-grid {
+      column-count: 4;
     }
   }
   
   @media (min-width: 1280px) {
-    .grid-sizer,
-    .grid-item {
-      width: 25%;
-      padding: 0 0.75rem;
-    }
-  }
-  
-  @media (min-width: 1536px) {
-    .grid-sizer,
-    .grid-item {
-      width: 20%;
-      padding: 0 0.75rem;
-    }
-  }
-  
-  @media (min-width: 2048px) {
-    .grid-sizer,
-    .grid-item {
-      width: 16.666667%;
-      padding: 0 0.75rem;
+    .pinterest-grid {
+      column-count: 4;
     }
   }
 
-  /* 样式已迁移到masonry布局中 */
+  @media (min-width: 1536px) {
+    .pinterest-grid {
+      column-count: 5;
+    }
+  }
+
+  @media (min-width: 2048px) {
+    .pinterest-grid {
+      column-count: 6;
+    }
+  }
+
+  .pinterest-item {
+    break-inside: avoid;
+    margin-bottom: 1.5rem;
+    display: block;
+  }
 }
 
 /* 表情反应组件样式 */

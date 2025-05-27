@@ -5,6 +5,7 @@ import Script from 'next/script';
 
 export default function AnalyticsScript() {
   const [analyticsCode, setAnalyticsCode] = useState<string>('');
+  const [googleId, setGoogleId] = useState<string>('');
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
   
@@ -32,10 +33,17 @@ export default function AnalyticsScript() {
         // 直接使用analyticsCode字段
         if (data.success && data.data && data.data.analyticsCode) {
           console.log('获取到统计代码:', data.data.analyticsCode.substring(0, 50) + '...');
-          console.log('统计代码类型:', typeof data.data.analyticsCode);
           
           // 设置统计代码
           setAnalyticsCode(data.data.analyticsCode);
+          
+          // 尝试提取Google Analytics ID
+          const idMatch = data.data.analyticsCode.match(/['"](G-[A-Z0-9]+)['"]/);
+          if (idMatch && idMatch[1]) {
+            console.log('提取到Google Analytics ID:', idMatch[1]);
+            setGoogleId(idMatch[1]);
+          }
+          
           setError(null);
         } else {
           console.warn('API返回成功但无统计代码:', data);
@@ -65,14 +73,38 @@ export default function AnalyticsScript() {
     }
   }, [analyticsCode]);
   
-  if (loading || error || !analyticsCode) return null;
+  if (loading || error) return null;
   
-  // 使用Script组件渲染统计代码
-  return (
-    <Script
-      id="analytics-script"
-      strategy="afterInteractive"
-      dangerouslySetInnerHTML={{ __html: analyticsCode }}
-    />
-  );
+  // 如果有Google Analytics ID，使用官方推荐的方式加载
+  if (googleId) {
+    return (
+      <>
+        <Script
+          src={`https://www.googletagmanager.com/gtag/js?id=${googleId}`}
+          strategy="afterInteractive"
+        />
+        <Script id="analytics-script" strategy="afterInteractive">
+          {`
+            window.dataLayer = window.dataLayer || [];
+            function gtag(){dataLayer.push(arguments);}
+            gtag('js', new Date());
+            gtag('config', '${googleId}');
+          `}
+        </Script>
+      </>
+    );
+  }
+  
+  // 如果没有提取到ID但有代码，使用dangerouslySetInnerHTML方式
+  if (analyticsCode) {
+    return (
+      <Script
+        id="analytics-script"
+        strategy="afterInteractive"
+        dangerouslySetInnerHTML={{ __html: analyticsCode }}
+      />
+    );
+  }
+  
+  return null;
 } 

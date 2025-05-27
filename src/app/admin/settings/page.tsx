@@ -7,6 +7,11 @@ import { get, post } from "@/lib/api"; // 导入API工具
 import { convertToApiImageUrl } from "@/lib/utils"; // 添加导入
 import dynamic from 'next/dynamic';
 
+// 动态加载调试组件，使其仅在客户端渲染
+const AnalyticsDebug = dynamic(() => import('./AnalyticsDebug'), {
+  ssr: false
+});
+
 // 使用完全相同的导入方式，确保与文章页面一致
 const FileUploader = dynamic(() => import('@/components/admin/FileUploader'), { 
   ssr: false,
@@ -514,6 +519,9 @@ export default function SettingsPage() {
   gtag('config', 'G-XXXXXXXX');
 </script>"
                 ></textarea>
+                
+                {/* 添加统计代码调试组件 */}
+                <AnalyticsDebug />
               </div>
             </div>
         </div>

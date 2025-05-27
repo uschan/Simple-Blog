@@ -100,6 +100,20 @@ export default async function RootLayout({
           rel="stylesheet"
           href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css"
         />
+        
+        {/* Google Analytics - 固定代码 */}
+        <Script
+          src="https://www.googletagmanager.com/gtag/js?id=G-5WCETFBZTL"
+          strategy="afterInteractive"
+        />
+        <Script id="google-analytics" strategy="afterInteractive">
+          {`
+            window.dataLayer = window.dataLayer || [];
+            function gtag(){dataLayer.push(arguments);}
+            gtag('js', new Date());
+            gtag('config', 'G-5WCETFBZTL');
+          `}
+        </Script>
       </head>
       <body
         className={`${raleway.variable} bg-bg text-text min-h-screen flex flex-col transition-colors duration-200`}
@@ -128,13 +142,6 @@ export default async function RootLayout({
         <Script
           id="emoji-reaction-js"
           src="/components/EmojiReaction.js"
-          strategy="afterInteractive"
-        />
-        
-        {/* 统计代码 - 正确方式嵌入 */}
-        <Script
-          id="analytics-code"
-          dangerouslySetInnerHTML={{ __html: settings.analytics.trackingCode || '' }}
           strategy="afterInteractive"
         />
       </body>

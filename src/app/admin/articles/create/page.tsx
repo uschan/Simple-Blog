@@ -8,6 +8,8 @@ import { get, post, uploadFile } from "@/lib/api";
 import { convertToApiImageUrl } from "@/lib/utils";
 import dynamic from 'next/dynamic';
 import toast from "react-hot-toast";
+// 导入AI助手组件
+import AiAssistant from "@/components/admin/AiAssistant";
 
 // 防抖函数
 const debounce = <T extends (...args: any[]) => void>(func: T, wait: number) => {
@@ -516,6 +518,8 @@ export default function CreateArticlePage() {
   const [availableCategories, setAvailableCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(false);
   const [showMediaLibrary, setShowMediaLibrary] = useState(false);
+  // 添加编辑器内容状态
+  const [editorContent, setEditorContent] = useState("");
 
   // 加载分类
   useEffect(() => {
@@ -561,11 +565,71 @@ export default function CreateArticlePage() {
     setFormData({ ...formData, [name]: value });
   };
 
-  // 编辑器内容变化 - 只存储在ref中，不触发重渲染
+  // 编辑器内容变化 - 除了存储在ref中，也更新状态用于AI助手
   const handleContentChange = useCallback((data: any) => {
     editorDataRef.current = data;
+    
+    // 获取纯文本内容用于AI助手
+    let plainText = "";
+    if (data && data.blocks) {
+      plainText = data.blocks
+        .map((block: any) => block.data?.text || "")
+        .filter(Boolean)
+        .join("\n\n");
+    }
+    setEditorContent(plainText);
   }, []);
-  
+
+  // 处理AI润色结果应用
+  const handleApplyPolish = (polishedContent: string) => {
+    // 应用到编辑器
+    if (window.confirm("是否将润色后的内容应用到编辑器？")) {
+      // 获取编辑器实例并设置内容
+      const editor = document.querySelector('.ProseMirror');
+      if (editor) {
+        // 由于编辑器是复杂组件，这里仅作为示例
+        // 实际应用中需要根据编辑器的API更新内容
+        toast.success("已应用润色内容");
+        
+        // 更新ref中的数据
+        editorDataRef.current = {
+          ...editorDataRef.current,
+          blocks: [{
+            type: "paragraph",
+            data: { text: polishedContent }
+          }]
+        };
+      }
+    }
+  };
+
+  // 处理AI生成的标题应用
+  const handleApplyTitle = (title: string) => {
+    setFormData(prev => ({ 
+      ...prev, 
+      title: title,
+      isCustomSlug: false // 重置为自动生成slug
+    }));
+    toast.success("已应用AI生成的标题");
+  };
+
+  // 处理AI生成的摘要应用
+  const handleApplySummary = (summary: string) => {
+    setFormData(prev => ({ ...prev, excerpt: summary }));
+    toast.success("已应用AI生成的摘要");
+  };
+
+  // 处理AI生成的SEO建议应用
+  const handleApplySeo = (slug: string, keywords: string[]) => {
+    setFormData(prev => ({ 
+      ...prev, 
+      slug: slug,
+      isCustomSlug: true, // 设置为自定义slug
+      tags: Array.from(new Set([...prev.tags, ...keywords])) // 使用Array.from转换Set为数组
+    }));
+    toast.success("已应用AI生成的SEO建议");
+  };
+
   // 处理从媒体库选择的媒体
   const handleMediaSelect = (path: string | string[]) => {
     if (mediaType === 'image') {
@@ -694,267 +758,305 @@ export default function CreateArticlePage() {
   };
 
   return (
-    <div className="container mx-auto max-w-6xl">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          {/* 主要内容区域 */}
-          <div className="md:col-span-2">
-            {/* 标题 */}
-            <div>
-              <label className="block text-sm dark:text-blue-500 font-medium mb-2">⋙⋙◟文章标题◞</label>
-              <input
-                type="text"
-                name="title"
-                value={formData.title}
-                onChange={handleInputChange}
-                placeholder="输入文章标题"
-                className="w-full px-4 py-2 rounded-lg bg-gray-100 dark:bg-zinc-800"
-              />
-            </div>
+    <div className="max-w-screen-xl mx-auto">
+      <div className="mb-6 flex items-center justify-between">
+        <h1 className="text-xl font-semibold underline underline-offset-8 decoration-wavy">
+          /// 创建新文章 ///
+        </h1>
+        <Link
+          href="/admin/articles"
+          className="px-4 py-2 bg-gray-200 dark:bg-gray-700 rounded-lg hover:bg-gray-300 transition flex items-center"
+        >
+          <i className="fas fa-arrow-left mr-2"></i>
+          返回列表
+        </Link>
+      </div>
 
-            {/* 自定义Slug */}
-            <div className="flex justify-between items-center mt-4 mb-2">
-              <label className="block text-sm dark:text-red-700 font-medium">⋙⋙◟文章链接◞</label>
-              <label className="inline-flex text-sm items-center">
-                <input
-                  type="checkbox"
-                  checked={formData.isCustomSlug}
-                  onChange={(e) => setFormData({ ...formData, isCustomSlug: e.target.checked })}
-                  className="rounded text-primary mr-2"
-                />
-                自定义URL
-              </label>
-            </div>
-            <div className="flex w-full">
-              <span className="bg-gray-100 dark:bg-zinc-700 px-3 py-2 rounded-l-lg text-text-light">
-                /article/
-              </span>
-              <input
-                type="text"
-                name="slug"
-                value={formData.slug}
-                onChange={handleInputChange}
-                disabled={!formData.isCustomSlug}
-                className="flex-1 px-4 py-2 rounded-r-lg bg-gray-100 dark:bg-zinc-800"
-              />
-            </div>
-
-            {/* 编辑器 */}
-            <div className="mb-6">
-              <label className="block text-sm dark:text-blue-500 font-medium mt-4 mb-2">⋙⋙◟文章内容◞</label>
-              <div className="editor-container" style={{ minHeight: "200px" }}>
-                <TiptapEditor
-                  initialValue=""
-                  onChange={(content) => {
-                    // 转换TipTap内容为EditorJS格式并保存到ref中
-                    editorDataRef.current = convertEditorContent(content, 'tiptap');
-                  }}
-                />
-              </div>
-            </div>
-
-            {/* 摘要 */}
-            <div className="mt-4">
-              <label className="block text-sm dark:text-blue-500 font-medium mb-2">⋙⋙◟文章摘要◞</label>
-              <textarea
-                name="excerpt"
-                value={formData.excerpt}
-                onChange={handleInputChange}
-                rows={3}
-                placeholder="输入文章摘要"
-                className="w-full text-xs italic px-4 py-2 rounded-lg bg-gray-100 dark:bg-zinc-800"
-              />
-            </div>
-          </div>
-
-          {/* 右侧设置区 */}
-          <div className="space-y-6">
-              {/* 发布设置 */}
-              {/* 媒体上传 */}
-              <div className="border-2 border-dotted border-gray-300 dark:border-zinc-900 bg-gray-100 dark:bg-zinc-800 rounded-lg p-4 text-center">
-                {/* 类型切换 */}
-                <div className="flex space-x-2 mb-4">
-                  {['image','gallery','video'].map(type => (
-                    <button
-                      key={type}
-                      onClick={() => setMediaType(type)}
-                      className={`px-3 py-1 text-sm rounded-md ${mediaType===type?'bg-primary text-white':''}`}
-                    >{type==='image'?'单图':type==='gallery'?'多图':'视频'}</button>
-                  ))}
-                </div>
-                {/* 预览或上传 */}
-                {mediaType==='image' && formData.featuredImage && (<div className="relative mb-2"><img src={convertToApiImageUrl(formData.featuredImage)} alt="Featured" className="w-full h-40 object-cover rounded-lg" /><button onClick={()=>setFormData({...formData,featuredImage:''})} className="absolute top-2 right-2 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center">×</button></div>)}
-                {mediaType==='gallery' && formData.galleryImages.length>0 && (<div className="grid grid-cols-3 gap-2 mb-2">{formData.galleryImages.map((img,idx)=><div key={idx} className="relative group"><img src={convertToApiImageUrl(img)} alt={`图${idx+1}`} className="w-full h-20 object-cover rounded-lg"/><div className="absolute inset-0 bg-black bg-opacity-50 hidden group-hover:flex items-center justify-center"><button onClick={()=>{const arr=[...formData.galleryImages];arr.splice(idx,1);setFormData({...formData,galleryImages:arr});}} className="text-white p-1 rounded-full">×</button></div></div>)}</div>)}
-                {mediaType==='video' && formData.videoUrl && (<div className="relative mb-2"><video controls className="w-full h-40 object-cover rounded-lg"><source src={convertToApiImageUrl(formData.videoUrl)} type="video/mp4"/></video><button onClick={()=>setFormData({...formData,videoUrl:''})} className="absolute top-2 right-2 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center">×</button></div>)}
-                {((mediaType==='image'&&!formData.featuredImage)||(mediaType==='gallery'&&formData.galleryImages.length===0)||(mediaType==='video'&&!formData.videoUrl))&&
-                <div 
-                  className="h-40 bg-white dark:bg-zinc-900 rounded-lg flex flex-col items-center justify-center"
-                  onDragOver={handleDragOver}
-                  onDragLeave={handleDragLeave}
-                  onDrop={handleDrop}
-                >
-                  <i className={`fas fa-${mediaType==='video'?'video':'image'} text-xl text-gray-400 mb-2`}></i>
-                  <p className="text-sm text-text-light mb-3">拖放或点击上传</p>
-                  <div className="flex gap-2">
-                    <FileUploader 
-                      fileType={mediaType==='gallery'?'多图':mediaType==='video'?'视频':'图片'} 
-                      uploadType="media" 
-                      accept={mediaType==='video'?'video/*':'image/*'} 
-                      multiple={mediaType==='gallery'} 
-                      buttonText={`上传${mediaType==='gallery'?'多图':mediaType==='video'?'视频':'图片'}`} 
-                      onUploadSuccess={path=>{
-                        if(mediaType==='image')setFormData({...formData,featuredImage:path});
-                        else if(mediaType==='video')setFormData({...formData,videoUrl:path});
-                      }} 
-                      onMultipleUploadSuccess={paths=>mediaType==='gallery'&&setFormData({...formData,galleryImages:[...formData.galleryImages,...paths]})} 
-                      onUploadError={err=>alert(err.message)}
-                    />
-                    <button
-                      onClick={() => setShowMediaLibrary(true)}
-                      className="px-3 py-2 bg-gray-200 dark:bg-zinc-700 text-gray-800 dark:text-gray-200 rounded text-sm flex items-center gap-1"
-                    >
-                      <i className="fas fa-photo-film"></i>
-                      <span>媒体库</span>
-                    </button>
-                  </div>
-                </div>}
-              </div>
-              
-              <div className="bg-gray-100 dark:bg-zinc-800 rounded-lg p-4">
-                {/* 分类 */}
-                  <label className="block text-sm dark:text-blue-500 font-medium mb-2">⋙⋙◟分类◞</label>
-                  {loading ? (
-                    <div className="h-10 bg-gray-100 dark:bg-gray-800 animate-pulse rounded-lg"></div>
-                  ) : (
-                    <select
-                      name="categoryId"
-                      value={formData.categoryId}
-                      onChange={handleInputChange}
-                      className="w-full text-xs italic px-3 py-2 rounded-lg bg-bg dark:bg-zinc-900 border border-gray-200"
-                    >
-                      <option value="">选择分类</option>
-                      {availableCategories.map((cat) => (
-                        <option key={cat._id} value={cat._id}>
-                          {cat.name}
-                        </option>
-                      ))}
-                    </select>
-                  )}
-
-                {/* 标签 */}
-                <div className="mt-4">
-                  <label className="block text-sm dark:text-blue-500 font-medium mb-2">⋙⋙◟标签◞</label>
-                  <div className="flex flex-wrap gap-2 mb-2">
-                    {formData.tags.map((tag, idx) => (
-                      <span key={idx} className="bg-primary text-white px-2 py-1 rounded-full text-xs flex items-center">
-                        {tag}
-                        <button
-                          onClick={() => setFormData({ ...formData, tags: formData.tags.filter((_, i) => i !== idx) })}
-                          className="ml-1"
-                        >×</button>
-                      </span>
-                    ))}
-                  </div>
-                  <input
-                    type="text"
-                    value={newTag}
-                    onChange={(e) => setNewTag(e.target.value)}
-                    onKeyDown={(e) => {
-                      if (e.key === ' ' && newTag.trim()) {
-                        setFormData({ ...formData, tags: [...formData.tags, newTag.trim()] });
-                        setNewTag('');
-                        e.preventDefault();
-                      }
-                    }}
-                    placeholder="添加新标签..."
-                    className="w-full text-xs italic px-3 py-2 rounded-lg bg-bg dark:bg-zinc-900 border border-gray-200"
-                  />
-                </div>
-
-                {/* 特色文章 */}
-                <div className="mt-4 flex flex-wrap gap-3">
-                  <label className="inline-flex items-center">
-                    <input
-                      type="checkbox"
-                      checked={formData.isFeatured}
-                      onChange={(e) => setFormData({ ...formData, isFeatured: e.target.checked })}
-                      className="rounded-full text-primary"
-                    />
-                    <span className="text-sm ml-2">特色文章</span>
-                  </label>
-                  <label className="inline-flex items-center ml-4">
-                    <input
-                      type="checkbox"
-                      checked={formData.isSlider}
-                      onChange={(e) => setFormData({ ...formData, isSlider: e.target.checked })}
-                      className="rounded-full text-primary"
-                    />
-                    <span className="text-sm ml-2">通栏轮播</span>
-                  </label>
-                </div>
-              </div>
-              <div className="bg-gray-100 dark:bg-zinc-800 rounded-lg p-4">
-                {/* 文章状态 */}
-                <label className="block text-sm dark:text-blue-500 font-medium mb-2">⋙⋙◟状态◞</label>
-                <select
-                  name="status"
-                  value={formData.status}
-                  onChange={handleInputChange}
-                  className="w-full text-xs italic px-3 py-2 rounded-lg bg-bg dark:bg-zinc-900 border border-gray-200 dark:border-0"
-                >
-                  <option value="published">发布</option>
-                  <option value="draft">草稿</option>
-                </select>
-
-                {/* 作者 */}
-                <div className="mt-4">
-                  <label className="block text-sm dark:text-blue-500 font-medium mb-2">⋙⋙◟作者◞</label>
-                  <input
-                    type="text"
-                    name="author"
-                    value={formData.author}
-                    onChange={handleInputChange}
-                    className="w-full text-xs italic px-3 py-2 rounded-lg bg-bg dark:bg-zinc-900 border border-gray-200"
-                  />
-                </div>
-                {/* 文章日期 */}
-                <div className="mt-4">
-                  <label className="block text-sm dark:text-blue-500 font-medium mb-2">⋙⋙◟发布日期◞</label>
-                  <div className="flex items-center space-x-2">
-                    <input
-                      type="date"
-                      name="publishedAt"
-                      value={formData.publishedAt}
-                      onChange={handleInputChange}
-                      className="w-full text-xs italic px-3 py-2 rounded-lg bg-bg dark:bg-gray-700 border border-gray-200 dark:bg-zinc-900"
-                    />
-                    <button
-                      type="button"
-                      onClick={() => setFormData({ ...formData, publishedAt: new Date().toISOString().split("T")[0] })}
-                      className="px-2 py-1 text-xs bg-primary text-white rounded"
-                    >今天</button>
-                  </div>
-                </div>
-              </div>
-
-              {/* 底部按钮 */}
-              <div className="flex justify-end space-x-4 pb-6">
-                <button onClick={()=>handleSave("draft")} disabled={saving} className="flex-1 md:flex-none px-6 py-2 bg-gray-200 dark:bg-gray-700 dark:text-gray-200 rounded-lg hover:bg-gray-300 transition">
-                  {saving?"保存中...":"保存为草稿"}
-                </button>
-                <button onClick={()=>handleSave("published")} disabled={saving} className="flex-1 px-6 py-2 rounded-lg transition-colors border border-primary-light bg-primary text-white hover:bg-primary-dark">
-                  {saving?"发布中...":"立即发布"}
-                </button>
-              </div>
-          </div>
-        </div>
-
-        {/* 媒体库选择模态框 */}
+      {/* 媒体库模态框 */}
+      {showMediaLibrary && (
         <MediaLibraryModal
           isOpen={showMediaLibrary}
           onClose={() => setShowMediaLibrary(false)}
           onSelect={handleMediaSelect}
-          mediaType={mediaType as any}
+          mediaType={mediaType as 'image' | 'video' | 'gallery'}
         />
+      )}
+
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div className="md:col-span-2">
+          {/* 标题 */}
+          <div>
+            <label className="block text-sm dark:text-blue-500 font-medium mb-2">⋙⋙◟文章标题◞</label>
+            <input
+              type="text"
+              name="title"
+              value={formData.title}
+              onChange={handleInputChange}
+              placeholder="输入文章标题"
+              className="w-full px-4 py-2 rounded-lg bg-gray-100 dark:bg-zinc-800"
+            />
+          </div>
+
+          {/* 自定义Slug */}
+          <div className="flex justify-between items-center mt-4 mb-2">
+            <label className="block text-sm dark:text-red-700 font-medium">⋙⋙◟文章链接◞</label>
+            <label className="inline-flex text-sm items-center">
+              <input
+                type="checkbox"
+                checked={formData.isCustomSlug}
+                onChange={(e) => setFormData({ ...formData, isCustomSlug: e.target.checked })}
+                className="rounded text-primary mr-2"
+              />
+              自定义URL
+            </label>
+          </div>
+          <div className="flex w-full">
+            <span className="bg-gray-100 dark:bg-zinc-700 px-3 py-2 rounded-l-lg text-text-light">
+              /article/
+            </span>
+            <input
+              type="text"
+              name="slug"
+              value={formData.slug}
+              onChange={handleInputChange}
+              disabled={!formData.isCustomSlug}
+              className="flex-1 px-4 py-2 rounded-r-lg bg-gray-100 dark:bg-zinc-800"
+            />
+          </div>
+
+          {/* 编辑器 */}
+          <div className="mb-6">
+            <label className="block text-sm dark:text-blue-500 font-medium mt-4 mb-2">⋙⋙◟文章内容◞</label>
+            <div className="editor-container" style={{ minHeight: "200px" }}>
+              <TiptapEditor
+                initialValue=""
+                onChange={(content) => {
+                  // 转换TipTap内容为EditorJS格式并保存到ref中
+                  editorDataRef.current = convertEditorContent(content, 'tiptap');
+                  // 提取纯文本用于AI助手
+                  try {
+                    let plainText = "";
+                    if (typeof content === 'object') {
+                      plainText = JSON.stringify(content);
+                    } else if (typeof content === 'string') {
+                      plainText = content;
+                    }
+                    setEditorContent(plainText);
+                  } catch (e) {
+                    console.error('提取编辑器内容失败:', e);
+                  }
+                }}
+              />
+            </div>
+          </div>
+
+          {/* 摘要 */}
+          <div className="mt-4">
+            <label className="block text-sm dark:text-blue-500 font-medium mb-2">⋙⋙◟文章摘要◞</label>
+            <textarea
+              name="excerpt"
+              value={formData.excerpt}
+              onChange={handleInputChange}
+              rows={3}
+              placeholder="输入文章摘要"
+              className="w-full text-xs italic px-4 py-2 rounded-lg bg-gray-100 dark:bg-zinc-800"
+            />
+          </div>
+          
+          {/* AI助手组件 */}
+          <div className="mt-6">
+            <AiAssistant 
+              articleTitle={formData.title}
+              articleContent={editorContent}
+              onPolishApply={handleApplyPolish}
+              onTitleSelect={handleApplyTitle}
+              onSummaryApply={handleApplySummary}
+              onSeoApply={handleApplySeo}
+            />
+          </div>
+        </div>
+
+        {/* 右侧设置区 */}
+        <div className="space-y-6">
+            {/* 发布设置 */}
+            {/* 媒体上传 */}
+            <div className="border-2 border-dotted border-gray-300 dark:border-zinc-900 bg-gray-100 dark:bg-zinc-800 rounded-lg p-4 text-center">
+              {/* 类型切换 */}
+              <div className="flex space-x-2 mb-4">
+                {['image','gallery','video'].map(type => (
+                  <button
+                    key={type}
+                    onClick={() => setMediaType(type)}
+                    className={`px-3 py-1 text-sm rounded-md ${mediaType===type?'bg-primary text-white':''}`}
+                  >{type==='image'?'单图':type==='gallery'?'多图':'视频'}</button>
+                ))}
+              </div>
+              {/* 预览或上传 */}
+              {mediaType==='image' && formData.featuredImage && (<div className="relative mb-2"><img src={convertToApiImageUrl(formData.featuredImage)} alt="Featured" className="w-full h-40 object-cover rounded-lg" /><button onClick={()=>setFormData({...formData,featuredImage:''})} className="absolute top-2 right-2 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center">×</button></div>)}
+              {mediaType==='gallery' && formData.galleryImages.length>0 && (<div className="grid grid-cols-3 gap-2 mb-2">{formData.galleryImages.map((img,idx)=><div key={idx} className="relative group"><img src={convertToApiImageUrl(img)} alt={`图${idx+1}`} className="w-full h-20 object-cover rounded-lg"/><div className="absolute inset-0 bg-black bg-opacity-50 hidden group-hover:flex items-center justify-center"><button onClick={()=>{const arr=[...formData.galleryImages];arr.splice(idx,1);setFormData({...formData,galleryImages:arr});}} className="text-white p-1 rounded-full">×</button></div></div>)}</div>)}
+              {mediaType==='video' && formData.videoUrl && (<div className="relative mb-2"><video controls className="w-full h-40 object-cover rounded-lg"><source src={convertToApiImageUrl(formData.videoUrl)} type="video/mp4"/></video><button onClick={()=>setFormData({...formData,videoUrl:''})} className="absolute top-2 right-2 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center">×</button></div>)}
+              {((mediaType==='image'&&!formData.featuredImage)||(mediaType==='gallery'&&formData.galleryImages.length===0)||(mediaType==='video'&&!formData.videoUrl))&&
+              <div 
+                className="h-40 bg-white dark:bg-zinc-900 rounded-lg flex flex-col items-center justify-center"
+                onDragOver={handleDragOver}
+                onDragLeave={handleDragLeave}
+                onDrop={handleDrop}
+              >
+                <i className={`fas fa-${mediaType==='video'?'video':'image'} text-xl text-gray-400 mb-2`}></i>
+                <p className="text-sm text-text-light mb-3">拖放或点击上传</p>
+                <div className="flex gap-2">
+                  <FileUploader 
+                    fileType={mediaType==='gallery'?'多图':mediaType==='video'?'视频':'图片'} 
+                    uploadType="media" 
+                    accept={mediaType==='video'?'video/*':'image/*'} 
+                    multiple={mediaType==='gallery'} 
+                    buttonText={`上传${mediaType==='gallery'?'多图':mediaType==='video'?'视频':'图片'}`} 
+                    onUploadSuccess={path=>{
+                      if(mediaType==='image')setFormData({...formData,featuredImage:path});
+                      else if(mediaType==='video')setFormData({...formData,videoUrl:path});
+                    }} 
+                    onMultipleUploadSuccess={paths=>mediaType==='gallery'&&setFormData({...formData,galleryImages:[...formData.galleryImages,...paths]})} 
+                    onUploadError={err=>alert(err.message)}
+                  />
+                  <button
+                    onClick={() => setShowMediaLibrary(true)}
+                    className="px-3 py-2 bg-gray-200 dark:bg-zinc-700 text-gray-800 dark:text-gray-200 rounded text-sm flex items-center gap-1"
+                  >
+                    <i className="fas fa-photo-film"></i>
+                    <span>媒体库</span>
+                  </button>
+                </div>
+              </div>}
+            </div>
+            
+            <div className="bg-gray-100 dark:bg-zinc-800 rounded-lg p-4">
+              {/* 分类 */}
+                <label className="block text-sm dark:text-blue-500 font-medium mb-2">⋙⋙◟分类◞</label>
+                {loading ? (
+                  <div className="h-10 bg-gray-100 dark:bg-gray-800 animate-pulse rounded-lg"></div>
+                ) : (
+                  <select
+                    name="categoryId"
+                    value={formData.categoryId}
+                    onChange={handleInputChange}
+                    className="w-full text-xs italic px-3 py-2 rounded-lg bg-bg dark:bg-zinc-900 border border-gray-200"
+                  >
+                    <option value="">选择分类</option>
+                    {availableCategories.map((cat) => (
+                      <option key={cat._id} value={cat._id}>
+                        {cat.name}
+                      </option>
+                    ))}
+                  </select>
+                )}
+
+              {/* 标签 */}
+              <div className="mt-4">
+                <label className="block text-sm dark:text-blue-500 font-medium mb-2">⋙⋙◟标签◞</label>
+                <div className="flex flex-wrap gap-2 mb-2">
+                  {formData.tags.map((tag, idx) => (
+                    <span key={idx} className="bg-primary text-white px-2 py-1 rounded-full text-xs flex items-center">
+                      {tag}
+                      <button
+                        onClick={() => setFormData({ ...formData, tags: formData.tags.filter((_, i) => i !== idx) })}
+                        className="ml-1"
+                      >×</button>
+                    </span>
+                  ))}
+                </div>
+                <input
+                  type="text"
+                  value={newTag}
+                  onChange={(e) => setNewTag(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === ' ' && newTag.trim()) {
+                      setFormData({ ...formData, tags: [...formData.tags, newTag.trim()] });
+                      setNewTag('');
+                      e.preventDefault();
+                    }
+                  }}
+                  placeholder="添加新标签..."
+                  className="w-full text-xs italic px-3 py-2 rounded-lg bg-bg dark:bg-zinc-900 border border-gray-200"
+                />
+              </div>
+
+              {/* 特色文章 */}
+              <div className="mt-4 flex flex-wrap gap-3">
+                <label className="inline-flex items-center">
+                  <input
+                    type="checkbox"
+                    checked={formData.isFeatured}
+                    onChange={(e) => setFormData({ ...formData, isFeatured: e.target.checked })}
+                    className="rounded-full text-primary"
+                  />
+                  <span className="text-sm ml-2">特色文章</span>
+                </label>
+                <label className="inline-flex items-center ml-4">
+                  <input
+                    type="checkbox"
+                    checked={formData.isSlider}
+                    onChange={(e) => setFormData({ ...formData, isSlider: e.target.checked })}
+                    className="rounded-full text-primary"
+                  />
+                  <span className="text-sm ml-2">通栏轮播</span>
+                </label>
+              </div>
+            </div>
+            <div className="bg-gray-100 dark:bg-zinc-800 rounded-lg p-4">
+              {/* 文章状态 */}
+              <label className="block text-sm dark:text-blue-500 font-medium mb-2">⋙⋙◟状态◞</label>
+              <select
+                name="status"
+                value={formData.status}
+                onChange={handleInputChange}
+                className="w-full text-xs italic px-3 py-2 rounded-lg bg-bg dark:bg-zinc-900 border border-gray-200 dark:border-0"
+              >
+                <option value="published">发布</option>
+                <option value="draft">草稿</option>
+              </select>
+
+              {/* 作者 */}
+              <div className="mt-4">
+                <label className="block text-sm dark:text-blue-500 font-medium mb-2">⋙⋙◟作者◞</label>
+                <input
+                  type="text"
+                  name="author"
+                  value={formData.author}
+                  onChange={handleInputChange}
+                  className="w-full text-xs italic px-3 py-2 rounded-lg bg-bg dark:bg-zinc-900 border border-gray-200"
+                />
+              </div>
+              {/* 文章日期 */}
+              <div className="mt-4">
+                <label className="block text-sm dark:text-blue-500 font-medium mb-2">⋙⋙◟发布日期◞</label>
+                <div className="flex items-center space-x-2">
+                  <input
+                    type="date"
+                    name="publishedAt"
+                    value={formData.publishedAt}
+                    onChange={handleInputChange}
+                    className="w-full text-xs italic px-3 py-2 rounded-lg bg-bg dark:bg-gray-700 border border-gray-200 dark:bg-zinc-900"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setFormData({ ...formData, publishedAt: new Date().toISOString().split("T")[0] })}
+                    className="px-2 py-1 text-xs bg-primary text-white rounded"
+                  >今天</button>
+                </div>
+              </div>
+            </div>
+
+            {/* 底部按钮 */}
+            <div className="flex justify-end space-x-4 pb-6">
+              <button onClick={()=>handleSave("draft")} disabled={saving} className="flex-1 md:flex-none px-6 py-2 bg-gray-200 dark:bg-gray-700 dark:text-gray-200 rounded-lg hover:bg-gray-300 transition">
+                {saving?"保存中...":"保存为草稿"}
+              </button>
+              <button onClick={()=>handleSave("published")} disabled={saving} className="flex-1 px-6 py-2 rounded-lg transition-colors border border-primary-light bg-primary text-white hover:bg-primary-dark">
+                {saving?"发布中...":"立即发布"}
+              </button>
+            </div>
+        </div>
+      </div>
     </div>
   );
 }

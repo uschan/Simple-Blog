@@ -7,10 +7,11 @@ import { get, del } from "@/lib/api"; // 导入API工具
 interface Article {
   _id: string;
   title: string;
-  author: {
+  author?: {
     _id: string;
     username: string;
   };
+  authorName?: string; // 添加作者名称字段
   slug: string;
   status: 'published' | 'draft';
   categories: Array<{
@@ -45,7 +46,7 @@ export default function ArticlesPage() {
   const [pagination, setPagination] = useState<Pagination>({
     total: 0,
     page: 1,
-    limit: 10,
+    limit: 20, // 增加每页显示数量
     totalPages: 0
   });
   const [isLoading, setIsLoading] = useState(true);
@@ -56,51 +57,74 @@ export default function ArticlesPage() {
   const [mediaType, setMediaType] = useState('image');
   
   // 加载文章数据
-  useEffect(() => {
-    const fetchArticles = async () => {
-      setIsLoading(true);
-      setError('');
-      
-      try {
-        const params = new URLSearchParams();
-        params.append('page', pagination.page.toString());
-        params.append('limit', pagination.limit.toString());
-        
-        if (selectedTab !== 'list') {
-          params.append('status', selectedTab);
-        }
-        
-        if (searchTerm) {
-          params.append('search', searchTerm);
-        }
-        
-        // 使用API工具发起请求 - 修正API路径
-        const data = await get(`/api/admin/articles?${params.toString()}`);
-        
-        setArticles(data.data.articles || []);
-        setPagination(data.data.pagination || {
-          total: 0,
-          page: 1,
-          limit: 10,
-          totalPages: 0
-        });
-      } catch (err: any) {
-        setError(err.message || '获取文章列表失败');
-        console.error('获取文章失败:', err);
-      } finally {
-        setIsLoading(false);
-      }
-    };
+  const fetchArticles = async (search: string = searchTerm, page: number = pagination.page) => {
+    setIsLoading(true);
+    setError('');
     
-    fetchArticles();
-  }, [selectedTab, pagination.page, pagination.limit, searchTerm]);
+    try {
+      // 创建查询参数
+      const params = new URLSearchParams();
+      params.append('page', page.toString());
+      params.append('limit', pagination.limit.toString());
+      
+      if (selectedTab !== 'list') {
+        params.append('status', selectedTab);
+      }
+      
+      // 添加搜索条件 - 仅使用search参数
+      if (search) {
+        // 只使用search参数，符合后端API route.ts的实现
+        params.append('search', search);
+        console.log('搜索关键词:', search);
+      }
+      
+      // 发送请求
+      const fullUrl = `/admin/articles?${params.toString()}`;
+      console.log('发送请求:', fullUrl);
+      
+      const response = await get(fullUrl);
+      console.log('搜索响应:', response);
+      
+      // 检查数据结构
+      if (!response || !response.data || !Array.isArray(response.data.articles)) {
+        throw new Error('API返回数据格式不正确');
+      }
+      
+      // 记录搜索结果
+      if (search) {
+        console.log(`搜索"${search}"的结果:`, response.data.articles.length);
+        response.data.articles.forEach((article: any, index: number) => {
+          // 检查标题是否包含搜索词
+          const titleContainsSearch = article.title && article.title.toLowerCase().includes(search.toLowerCase());
+          console.log(`${index+1}. ${article.title} ${titleContainsSearch ? '✓' : '✗'}`);
+        });
+      }
+      
+      setArticles(response.data.articles || []);
+      setPagination({
+        ...pagination,
+        page: page,
+        total: response.data.pagination?.total || 0,
+        totalPages: response.data.pagination?.totalPages || 1
+      });
+    } catch (err: any) {
+      console.error('搜索请求失败:', err);
+      setError(`搜索失败: ${err.message}`);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+  
+  // 初始加载和标签切换时加载数据
+  useEffect(() => {
+    fetchArticles('', 1);
+  }, [selectedTab]);
   
   // 删除文章
   const handleDeleteArticle = async (id: string) => {
     if (confirm('确定要删除这篇文章吗？此操作不可撤销。')) {
       try {
-        // 使用API工具删除文章 - 修正API路径
-        await del(`/api/admin/articles?id=${id}`);
+        await del(`/admin/articles?id=${id}`);
         
         // 刷新文章列表
         setArticles(articles.filter(article => article._id !== id));
@@ -115,14 +139,26 @@ export default function ArticlesPage() {
   // 处理搜索
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
-    // 搜索时重置到第一页
-    setPagination({...pagination, page: 1});
+    if (!searchTerm.trim()) {
+      // 如果搜索词为空，显示全部文章
+      clearSearch();
+      return;
+    }
+    
+    // 搜索时重置到第一页并立即执行搜索
+    fetchArticles(searchTerm.trim(), 1);
+  };
+
+  // 清除搜索并显示所有文章
+  const clearSearch = () => {
+    setSearchTerm('');
+    fetchArticles('', 1);
   };
   
   // 切换页面
   const handlePageChange = (page: number) => {
     if (page < 1 || page > pagination.totalPages) return;
-    setPagination({...pagination, page});
+    fetchArticles(searchTerm, page);
   };
   
   return (
@@ -161,16 +197,36 @@ export default function ArticlesPage() {
             <form onSubmit={handleSearch} className="w-full max-w-md relative">
               <input 
                 type="text" 
-                placeholder="搜索文章..." 
-                className="w-full text-xs italic pl-10 pr-4 py-4 rounded-lg bg-white dark:bg-zinc-900 border border-gray-200 dark:border-gray-700"
+                placeholder="输入关键词搜索文章..." 
+                className="w-full text-sm pl-10 pr-16 py-3 rounded-lg bg-white dark:bg-zinc-900 border border-gray-200 dark:border-gray-700"
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
               />
               <i className="fas fa-search absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500 dark:text-gray-400"></i>
-              <button type="submit" className="hidden">搜索</button>
+              
+              <div className="absolute right-1 top-1/2 transform -translate-y-1/2 flex">
+                {/* 条件渲染清除按钮 */}
+                {searchTerm && (
+                  <button 
+                    type="button"
+                    onClick={clearSearch}
+                    className="px-2 py-1 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
+                    title="清除搜索"
+                  >
+                    <i className="fas fa-times"></i>
+                  </button>
+                )}
+                
+                <button 
+                  type="submit" 
+                  className="px-3 py-1.5 bg-primary text-white rounded-md text-sm font-medium hover:bg-primary-dark"
+                >
+                  搜索
+                </button>
+              </div>
             </form>
             
-            {/* 新增文章按钮 - 修改为链接到新建文章页面 */}
+            {/* 新增文章按钮 */}
             <Link href="/admin/articles/create">
               <button className="bg-primary text-white px-4 py-2 rounded-lg hover:bg-primary-dark transition-colors inline-flex items-center whitespace-nowrap ml-4">
                 <i className="fa-solid fa-plus mr-2"></i>
@@ -179,10 +235,35 @@ export default function ArticlesPage() {
             </Link>
           </div>
           
+          {/* 搜索状态提示 */}
+          {searchTerm && (
+            <div className="mb-4 text-sm bg-gray-100 dark:bg-zinc-800 px-3 py-2 rounded-md flex items-center justify-between">
+              <div>
+                <span className="text-gray-700 dark:text-gray-300">
+                  搜索 &quot;<span className="font-bold text-primary">{searchTerm}</span>&quot; 
+                  的结果：共找到 <span className="font-bold text-primary">{pagination.total}</span> 篇文章
+                </span>
+                {pagination.total > 0 && (
+                  <span className="ml-2 text-gray-500 text-xs">
+                    (显示第 {((pagination.page - 1) * pagination.limit) + 1} - {Math.min(pagination.page * pagination.limit, pagination.total)} 篇)
+                  </span>
+                )}
+              </div>
+              <button 
+                onClick={clearSearch}
+                className="text-primary hover:underline text-sm font-medium flex items-center"
+              >
+                <i className="fas fa-times-circle mr-1"></i>
+                清除搜索
+              </button>
+            </div>
+          )}
+          
           {/* 错误提示 */}
           {error && (
             <div className="mb-4 p-3 bg-red-100 text-red-700 rounded-md">
-              {error}
+              <p className="font-medium">{error}</p>
+              <p className="text-xs mt-1">请确认搜索关键词是否正确，或联系管理员检查后端搜索功能。</p>
             </div>
           )}
           
@@ -191,11 +272,21 @@ export default function ArticlesPage() {
             {isLoading ? (
               <div className="py-20 text-center">
                 <div className="inline-block animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-primary"></div>
-                <p className="mt-2 text-gray-500 dark:text-gray-400">加载中...</p>
+                <p className="mt-2 text-gray-500 dark:text-gray-400">{searchTerm ? '正在搜索...' : '加载中...'}</p>
               </div>
             ) : articles.length === 0 ? (
               <div className="py-8 text-center">
-                <p className="text-gray-500 dark:text-gray-400">没有找到符合条件的文章</p>
+                <p className="text-gray-500 dark:text-gray-400">
+                  {searchTerm ? `没有找到包含 "${searchTerm}" 的文章` : "没有找到符合条件的文章"}
+                </p>
+                {searchTerm && (
+                  <button
+                    onClick={clearSearch}
+                    className="mt-2 text-primary hover:underline"
+                  >
+                    显示全部文章
+                  </button>
+                )}
               </div>
             ) : (
               <div className="overflow-x-auto">
@@ -228,15 +319,25 @@ export default function ArticlesPage() {
                               <div className="font-medium text-gray-900 dark:text-white">
                                 {article.coverType && (
                                   <span className="text-xs mr-1 px-1.5 py-0.5 rounded bg-gray-100 dark:bg-zinc-700 text-gray-700 dark:text-gray-300">
-                                    {article.coverType === 'gallery' ? '多图/' : 
-                                     article.coverType === 'video' ? '视频/' : 
-                                     '单图/'}
+                                    {article.coverType === 'gallery' ? '多图' : 
+                                     article.coverType === 'video' ? '视频' : 
+                                     '单图'}
                                   </span>
                                 )}
-                                {article.title}
+                                {/* 高亮匹配的关键词，安全处理正则表达式 */}
+                                {searchTerm && article.title ? (
+                                  <span dangerouslySetInnerHTML={{
+                                    __html: article.title.replace(
+                                      new RegExp(searchTerm.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&'), 'gi'),
+                                      '<mark class="bg-yellow-200 dark:bg-yellow-800 text-black dark:text-white px-0.5 rounded">$&</mark>'
+                                    )
+                                  }} />
+                                ) : (
+                                  article.title
+                                )}
                               </div>
                               <div className="text-gray-500 dark:text-gray-400 text-xs">
-                                <i className="fas fa-user"></i> {article.author?.username || '野盐'} 
+                                <i className="fas fa-user"></i> {article.author?.username || article.authorName || '野盐'} 
                                 <span className="text-gray-500 ml-1">
                                   {formatDate(article.publishedAt || article.createdAt)}
                                 </span>

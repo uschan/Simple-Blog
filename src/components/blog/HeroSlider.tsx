@@ -56,7 +56,7 @@ const ArticleCard = ({ article, className = '' }: { article: Article, className?
           </Link>
         ) : (
           <div className="w-full h-full bg-gradient-to-b from-gray-200 to-gray-600 flex items-center justify-center">
-            <i className="fas fa-image text-white text-4xl"></i>
+            <i className="fa-solid fa-hotdog text-white text-4xl"></i>
           </div>
         )}
       </div>
@@ -71,7 +71,7 @@ const ArticleCard = ({ article, className = '' }: { article: Article, className?
           ))}
         </div>
         
-        <Link href={`/article/${article.slug}`} className="group">
+        <Link href={`/article/${article.slug}`} className="mb-12 group">
           <h2 className="text-white text-lg sm:text-xl lg:text-2xl font-medium mb-1 line-clamp-2 transition-colors">
             {article.title}
           </h2>
@@ -167,7 +167,7 @@ export default function HeroSlider({ articles }: HeroSliderProps) {
       {/* 图片数量指示器 - 只在移动端显示 */}
       {isLoaded && safeArticles.length > 1 && (
         <div className="lg:hidden absolute top-4 right-4 bg-black/60 backdrop-blur-md text-white text-xs font-medium px-3 py-1.5 rounded-full border border-white/20 shadow-lg flex items-center space-x-1.5 z-20">
-          <i className="fas fa-images"></i>
+          <i className="fa-solid fa-fire"></i>
           <span>{currentIndex + 1}/{safeArticles.length}</span>
         </div>
       )}

@@ -6,6 +6,7 @@ import Reaction from './reaction';
 import Setting from './setting';
 import User from './user';
 import PageView from './pageView';
+import ApiKey from './ApiKey';
 
 // 导出接口
 import type { IArticle } from './article';
@@ -16,6 +17,7 @@ import type { IReaction } from './reaction';
 import type { ISetting } from './setting';
 import type { IUser } from './user';
 import type { IPageView } from './pageView';
+import type { IApiKey } from './ApiKey';
 
 // 导出模型
 export {
@@ -26,7 +28,8 @@ export {
   Reaction,
   Setting,
   User,
-  PageView
+  PageView,
+  ApiKey
 };
 
 // 导出类型
@@ -38,5 +41,6 @@ export type {
   IReaction,
   ISetting,
   IUser,
-  IPageView
+  IPageView,
+  IApiKey
 }; 

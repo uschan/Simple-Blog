@@ -145,7 +145,7 @@ export default function SettingsPage() {
           // 兼容旧格式
           analyticsType = 'custom';
           analyticsCode = data.analyticsCode;
-        }
+          }
         
         // 构建格式化的设置数据
         const formattedSettings: SiteSettings = {
@@ -477,7 +477,7 @@ export default function SettingsPage() {
         </div>
         <div className="bg-gray-100 dark:bg-zinc-800 rounded-lg p-4">               
             {/* 统计代码 */}
-            <div className="mb-4">          
+            <div className="mb-4">
               <div>
                 <label className="block text-sm dark:text-blue-500 font-medium mb-2">⋙⋙◜统计代码◝</label>
                 <div className="mb-2 text-xs text-gray-600 dark:text-gray-400 italic">

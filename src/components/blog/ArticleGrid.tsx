@@ -304,16 +304,16 @@ export default function ArticleGrid({ initialArticles, className = '' }: Article
           
           if (newArticles.length > 0) {
             setArticles(prev => [...prev, ...newArticles]);
-            setPage(nextPage);
+          setPage(nextPage);
             // console.log(`已加载${newArticles.length}篇新文章`);
-          }
+        }
 
           // 检查是否还有更多数据 - 只有明确为false时才设置为没有更多
           const hasMoreData = result.pagination?.hasMore !== false && newArticles.length > 0;
           setHasMore(hasMoreData);
           // console.log('是否有更多数据:', hasMoreData);
 
-          // 检查是否达到最大限制
+        // 检查是否达到最大限制
           if (result.pagination?.hasMore === false || newArticles.length === 0) {
             // console.log('已达到最大限制，没有更多数据');
             setReachedMax(true);
@@ -329,14 +329,14 @@ export default function ArticleGrid({ initialArticles, className = '' }: Article
         console.error('API返回格式异常:', result);
         // 不立即设置hasMore为false，给后续加载机会
         if (page > 3) { // 多尝试几页后再放弃
-          setHasMore(false);
+        setHasMore(false);
         }
       }
     } catch (error) {
       console.error('加载更多文章失败:', error);
       // 出错后不立即放弃，给用户重试机会
       if (page > 3) { // 多次失败后再停止尝试
-        setHasMore(false);
+      setHasMore(false);
       }
     } finally {
       setLoading(false);
@@ -378,116 +378,116 @@ export default function ArticleGrid({ initialArticles, className = '' }: Article
 
   // 渲染文章卡片的函数
   const renderArticleCard = (article: Article, index: number) => {
-    return (
+  return (
       <div 
         key={`${article._id}-${index}`} 
         className="pinterest-item text-sm bg-bg-card rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-shadow border border-gray-200"
       >
-        <div className="relative">
-          {/* 根据coverType显示不同类型的媒体 */}
-          {article.coverType === 'video' ? (
-            // 视频类型
             <div className="relative">
-              <video 
-                src={convertToApiImageUrl(article.videoUrl || article.coverVideo || '')} 
-                preload="metadata"
-                controls
-                className="w-full h-[250px] object-cover bg-gray-100"
-              />
-              {/* 分类标签 */}
-              <div className="absolute top-2.5 left-2.5 flex space-x-2 z-20">
-                {article.categories?.length ? (
-                  article.categories.map((cat: Category) => (
-                    <span key={cat._id} className="bg-primary/90 text-white px-3 py-1.5 text-xs font-medium rounded-full border border-white/20 shadow-md backdrop-blur-sm">
-                      {cat.name}
-                    </span>
-                  ))
-                ) : null}
-              </div>
-            </div>
-          ) : article.coverType === 'gallery' ? (
-            // 多图类型 - 使用轮播组件
-            <GalleryCard 
-              images={
-                article.galleryImages?.length ? article.galleryImages.map(img => convertToApiImageUrl(img)) :
-                article.coverGallery?.length ? article.coverGallery.map(img => convertToApiImageUrl(img)) :
-                article.featuredImage || article.coverImage ? [convertToApiImageUrl(article.featuredImage || article.coverImage || '')] : []
-              }
-              title={article.title}
-              category={article.categories?.length ? article.categories[0] : undefined}
-            />
-          ) : (
-            // 默认单图类型
-            <div className="relative">
-              {article.featuredImage || article.coverImage ? (
-                <Link href={`/article/${article.slug}`} onClick={() => saveStateBeforeNavigation(article._id)}>
-                  <OptimizedImage 
-                    src={convertToApiImageUrl(article.featuredImage || article.coverImage || '')} 
-                    alt={article.title}
-                    width={400}
-                    height={250}
-                    className="w-full"
-                    optimizeImage={true}
-                    imageFormat="webp"
-                    quality={85}
+              {/* 根据coverType显示不同类型的媒体 */}
+              {article.coverType === 'video' ? (
+                // 视频类型
+                <div className="relative">
+                  <video 
+                    src={convertToApiImageUrl(article.videoUrl || article.coverVideo || '')} 
+                    preload="metadata"
+                    controls
+                    className="w-full h-[250px] object-cover bg-gray-100"
                   />
-                </Link>
+                  {/* 分类标签 */}
+                  <div className="absolute top-2.5 left-2.5 flex space-x-2 z-20">
+                    {article.categories?.length ? (
+                      article.categories.map((cat: Category) => (
+                        <span key={cat._id} className="bg-primary/90 text-white px-3 py-1.5 text-xs font-medium rounded-full border border-white/20 shadow-md backdrop-blur-sm">
+                          {cat.name}
+                        </span>
+                      ))
+                    ) : null}
+                  </div>
+                </div>
+              ) : article.coverType === 'gallery' ? (
+                // 多图类型 - 使用轮播组件
+                <GalleryCard 
+                  images={
+                    article.galleryImages?.length ? article.galleryImages.map(img => convertToApiImageUrl(img)) :
+                    article.coverGallery?.length ? article.coverGallery.map(img => convertToApiImageUrl(img)) :
+                    article.featuredImage || article.coverImage ? [convertToApiImageUrl(article.featuredImage || article.coverImage || '')] : []
+                  }
+                  title={article.title}
+                  category={article.categories?.length ? article.categories[0] : undefined}
+                />
               ) : (
-                <div className="w-full h-[250px] bg-gray-200 flex items-center justify-center">
-                  <i className="fas fa-file-alt text-gray-400 text-3xl"></i>
+                // 默认单图类型
+                <div className="relative">
+                  {article.featuredImage || article.coverImage ? (
+                <Link href={`/article/${article.slug}`} onClick={() => saveStateBeforeNavigation(article._id)}>
+                      <OptimizedImage 
+                        src={convertToApiImageUrl(article.featuredImage || article.coverImage || '')} 
+                        alt={article.title}
+                        width={400}
+                        height={250}
+                        className="w-full"
+                        optimizeImage={true}
+                        imageFormat="webp"
+                        quality={85}
+                      />
+                    </Link>
+                  ) : (
+                    <div className="w-full h-[250px] bg-gray-200 flex items-center justify-center">
+                      <i className="fas fa-file-alt text-gray-400 text-3xl"></i>
+                    </div>
+                  )}
+                  {/* 分类标签 */}
+                  <div className="absolute top-2.5 left-2.5 flex space-x-2 z-20">
+                    {article.categories?.length ? (
+                      article.categories.map((cat: Category) => (
+                        <span key={cat._id} className="bg-primary/90 text-white px-3 py-1.5 text-xs font-medium rounded-full border border-white/20 shadow-md backdrop-blur-sm">
+                          {cat.name}
+                        </span>
+                      ))
+                    ) : null}
+                  </div>
                 </div>
               )}
-              {/* 分类标签 */}
-              <div className="absolute top-2.5 left-2.5 flex space-x-2 z-20">
-                {article.categories?.length ? (
-                  article.categories.map((cat: Category) => (
-                    <span key={cat._id} className="bg-primary/90 text-white px-3 py-1.5 text-xs font-medium rounded-full border border-white/20 shadow-md backdrop-blur-sm">
-                      {cat.name}
-                    </span>
-                  ))
-                ) : null}
-              </div>
             </div>
-          )}
-        </div>
-        
-        <div className="px-4 py-2">
+            
+            <div className="px-4 py-2">
           <Link href={`/article/${article.slug}`} onClick={() => saveStateBeforeNavigation(article._id)}>
-            <h3 className="text-base font-bold text-primary mb-2">{article.title}</h3>
-          </Link>                
-          <div className="flex items-center mb-2">
-            <i className="fa-solid fa-user-astronaut mr-1"></i>
-            <span className="text-xs text-text-light">
-              {article.authorName || '匿名'} | {formatDate(article.publishedAt || article.createdAt)}
-            </span>
-          </div>
-
-          <p className="text-text-light mb-2">{article.excerpt || article.summary}</p>
-          <div className="border-t border-gray-200 my-2"></div>
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-2">
-              <EmojiReaction 
-                article={{
-                  id: article._id,
-                  reactionCount: article.likes || 0,
-                  userReaction: 'like'
-                }}
-              />
-            </div>
-            <div className="flex items-center text-sm text-text-light space-x-4">
-              <div className="flex items-center">
-                <i className="fa-solid fa-eye mr-1"></i>
-                <span>{article.viewCount || 0}</span>
+                <h3 className="text-base font-bold text-primary mb-2">{article.title}</h3>
+              </Link>                
+              <div className="flex items-center mb-2">
+                <i className="fa-solid fa-user-astronaut mr-1"></i>
+                <span className="text-xs text-text-light">
+                  {article.authorName || '匿名'} | {formatDate(article.publishedAt || article.createdAt)}
+                </span>
               </div>
-              <ShareButton 
-                url={`/article/${article.slug}`} 
-                title={article.title}
-                summary={article.excerpt || article.summary || ''}
-              />
+
+              <p className="text-text-light mb-2">{article.excerpt || article.summary}</p>
+              <div className="border-t border-gray-200 my-2"></div>
+              <div className="flex items-center justify-between">
+                <div className="flex items-center space-x-2">
+                  <EmojiReaction 
+                    article={{
+                      id: article._id,
+                      reactionCount: article.likes || 0,
+                      userReaction: 'like'
+                    }}
+                  />
+                </div>
+                <div className="flex items-center text-sm text-text-light space-x-4">
+                  <div className="flex items-center">
+                    <i className="fa-solid fa-eye mr-1"></i>
+                    <span>{article.viewCount || 0}</span>
+                  </div>
+                  <ShareButton 
+                    url={`/article/${article.slug}`} 
+                    title={article.title}
+                    summary={article.excerpt || article.summary || ''}
+                  />
+                </div>
+              </div>
             </div>
           </div>
-        </div>
-      </div>
     );
   };
 

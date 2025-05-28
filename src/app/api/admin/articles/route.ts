@@ -65,7 +65,23 @@ export async function GET(request: NextRequest) {
     }
     
     if (search) {
-      query.$text = { $search: search };
+      // 1. 使用文本索引搜索 - 适用于全词匹配
+      // query.$text = { $search: search };
+      
+      // 2. 使用正则表达式搜索 - 更适合中文和部分匹配
+      const searchRegex = new RegExp(search, 'i');
+      query.$or = [
+        { title: searchRegex },       // 标题匹配
+        { content: searchRegex },     // 内容匹配
+        { summary: searchRegex },     // 摘要匹配
+        { tags: searchRegex }         // 标签匹配
+      ];
+      
+      console.log('搜索条件:', {
+        searchTerm: search,
+        regex: searchRegex.toString(),
+        query: JSON.stringify(query)
+      });
     }
     
     const skip = (page - 1) * limit;

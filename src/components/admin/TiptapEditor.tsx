@@ -12,6 +12,13 @@ import Highlight from '@tiptap/extension-highlight';
 import { uploadFile } from '@/lib/api';
 import { convertToApiImageUrl } from '@/lib/utils';
 
+// 添加全局变量声明
+declare global {
+  interface Window {
+    tiptapEditor: Editor | null;
+  }
+}
+
 interface TiptapEditorProps {
   initialValue?: string;
   onChange: (content: any) => void;
@@ -89,10 +96,22 @@ const TiptapEditor = ({ initialValue = '', onChange }: TiptapEditorProps) => {
     },
   });
 
-  // 保存编辑器引用到ref
+  // 保存编辑器引用到ref和全局变量
   useEffect(() => {
     if (editor) {
       editorRef.current = editor;
+      
+      // 设置全局变量以便外部访问
+      if (typeof window !== 'undefined') {
+        window.tiptapEditor = editor;
+      }
+      
+      // 在组件卸载时清除全局引用
+      return () => {
+        if (typeof window !== 'undefined') {
+          window.tiptapEditor = null;
+        }
+      };
     }
   }, [editor]);
 

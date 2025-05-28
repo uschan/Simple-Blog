@@ -550,6 +550,8 @@ export default function EditArticlePage() {
   const [saving, setSaving] = useState(false);
   const [newTag, setNewTag] = useState('');
   const [showMediaLibrary, setShowMediaLibrary] = useState(false); // 添加媒体库显示状态
+  // 添加可用分类列表状态
+  const [availableCategories, setAvailableCategories] = useState<Array<{_id: string, name: string}>>([]);
 
   // 加载文章数据
   useEffect(() => {
@@ -642,7 +644,24 @@ export default function EditArticlePage() {
     };
     
     fetchArticle();
+    // 同时获取所有可用分类
+    fetchAllCategories();
   }, [id]);
+  
+  // 获取所有可用分类
+  const fetchAllCategories = async () => {
+    try {
+      // 使用API工具中的get方法
+      const data = await get("/admin/categories");
+      if (data.data && Array.isArray(data.data)) {
+        setAvailableCategories(data.data);
+      } else {
+        console.error("分类数据格式不正确:", data);
+      }
+    } catch (err) {
+      console.error("获取分类列表失败:", err);
+    }
+  };
 
   // 处理表单更新
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
@@ -1009,7 +1028,7 @@ export default function EditArticlePage() {
                 className="w-full text-xs italic px-3 py-2 rounded-lg bg-bg dark:bg-zinc-900 border border-gray-200"
                 >
                   <option value="">选择分类</option>
-                {formData.categories.map((cat) => (
+                {availableCategories.map((cat) => (
                   <option key={cat._id} value={cat._id}>
                     {cat.name}
                   </option>

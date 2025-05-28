@@ -85,43 +85,61 @@ export default function AiAssistant({
       return;
     }
     
-    // 提取标签关键词 - 查找"标签"、"关键词"或"标签关键词"部分
-    const keywordsSection = analysisResult.match(/(?:标签关键词|标签|关键词)[^\n]*\n([\s\S]+?)(?:\n\n|\n---|\n###|$)/i);
+    // 简单提取可能的标签
+    const potentialTags: string[] = [];
     
-    let keywords: string[] = [];
-    if (keywordsSection && keywordsSection[1]) {
-      const keywordText = keywordsSection[1].trim();
-      
-      // 获取所有标签，不论格式，确保清除所有前缀
-      const allLines = keywordText.split('\n')
-        .map(line => line.trim())
-        .filter(line => line.length > 0);
-      
-      // 处理每一行，提取纯标签文本
-      for (const line of allLines) {
-        // 移除所有可能的前缀：- # • * 等
-        let cleanTag = line.replace(/^[-•*]\s*/, ''); // 移除列表符号
-        cleanTag = cleanTag.replace(/^#\s*/, '');     // 移除#号
-        cleanTag = cleanTag.trim();
-        
-        if (cleanTag) {
-          keywords.push(cleanTag);
+    // 1. 查找 #开头的单词
+    const hashTags = analysisResult.match(/#([a-zA-Z0-9\u4e00-\u9fa5]+)/g);
+    if (hashTags) {
+      hashTags.forEach(tag => {
+        const clean = tag.replace(/^#/, '').trim();
+        if (clean && !potentialTags.includes(clean) && clean.length < 20) {
+          potentialTags.push(clean);
         }
-      }
-      
-      // 去重
-      keywords = Array.from(new Set(keywords));
+      });
     }
     
-    // 如果没有找到标签，使用URL中的关键词
-    if (keywords.length === 0) {
-      keywords = slug.split('-');
+    // 2. 查找标签关键词部分的列表项
+    const keywordSection = analysisResult.match(/(?:标签关键词|标签|关键词)[^\n]*\n([\s\S]+?)(?:\n\n|\n---|\n###|$)/i);
+    if (keywordSection && keywordSection[1]) {
+      const keywordText = keywordSection[1];
+      const listItems = keywordText.match(/(?:^|\n)[-•*]\s*(?:#)?([^\n]+)/g);
+      
+      if (listItems) {
+        listItems.forEach(item => {
+          const clean = item
+            .replace(/^[-•*]\s*/, '') // 移除列表符号
+            .replace(/^#\s*/, '')     // 移除#号
+            .trim();
+          
+          if (clean && !potentialTags.includes(clean) && clean.length < 20 && !clean.includes('*')) {
+            potentialTags.push(clean);
+          }
+        });
+      }
+    }
+    
+    // 3. 如果没有找到标签，使用URL中的单词
+    if (potentialTags.length === 0) {
+      slug.split('-').forEach(word => {
+        if (word.length > 2) {
+          potentialTags.push(word);
+        }
+      });
+    }
+    
+    // 使用简单的标签列表
+    let selectedTags = potentialTags;
+    
+    // 如果标签数量过多，可能会误选一些非标签内容，则只保留前5个
+    if (selectedTags.length > 7) {
+      selectedTags = selectedTags.slice(0, 5);
     }
     
     console.log('提取的URL:', slug);
-    console.log('提取的标签:', keywords);
+    console.log('提取的标签:', selectedTags);
     
-    onSeoApply(slug, keywords);
+    onSeoApply(slug, selectedTags);
   };
   
   // 提取并应用内容

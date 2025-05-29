@@ -279,6 +279,7 @@ export default function Navbar({ categories = [] }: { categories: Category[] }) 
             <span>|</span>
             <Link href="https://wildsalt.me" target="_blank" className="text-text hover:text-primary">WILDSALT</Link>
             <Link href="https://ci.wildsalt.me" target="_blank" className="text-text hover:text-primary">小词大意</Link>
+            <Link href="/intro" className="text-text hover:text-primary">野盐博客</Link>
           </div>
           <div className="flex items-center space-x-4">
             <Link href="/api/rss" target="_blank" className="text-text hover:text-primary" title="RSS订阅">
@@ -422,6 +423,7 @@ export default function Navbar({ categories = [] }: { categories: Category[] }) 
                 <i className="fa-solid fa-mountain-city mr-2"></i> 首页
               </Link>
             </li>
+
             {/* 移动端菜单也使用传入的分类 */}
             {categories.slice(0, 8).map((category) => (
               <li key={category._id}>
@@ -434,6 +436,15 @@ export default function Navbar({ categories = [] }: { categories: Category[] }) 
                 </Link>
               </li>
             ))}
+            <li>
+              <Link 
+                href="/intro" 
+                className="block py-2 px-4 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg"
+                onClick={() => setIsMenuOpen(false)}
+              >
+                <i className="fa-solid fa-mountain-city mr-2"></i> 关于野盐
+              </Link>
+            </li>            
             <li>
               <Link 
                 href="/api/rss" 

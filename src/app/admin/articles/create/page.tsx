@@ -797,6 +797,18 @@ export default function CreateArticlePage() {
             />
           </div>
 
+          {/* AI助手组件 */}
+          <div className="mt-6">
+            <AiAssistant 
+              articleTitle={formData.title}
+              articleContent={editorContent}
+              onPolishApply={handleApplyPolish}
+              onTitleSelect={handleApplyTitle}
+              onSummaryApply={handleApplySummary}
+              onSeoApply={handleApplySeo}
+            />
+          </div>
+
           {/* 自定义Slug */}
           <div className="flex justify-between items-center mt-4 mb-2">
             <label className="block text-sm dark:text-red-700 font-medium">⋙⋙◟文章链接◞</label>
@@ -860,18 +872,6 @@ export default function CreateArticlePage() {
               rows={3}
               placeholder="输入文章摘要"
               className="w-full text-xs italic px-4 py-2 rounded-lg bg-gray-100 dark:bg-zinc-800"
-            />
-          </div>
-          
-          {/* AI助手组件 */}
-          <div className="mt-6">
-            <AiAssistant 
-              articleTitle={formData.title}
-              articleContent={editorContent}
-              onPolishApply={handleApplyPolish}
-              onTitleSelect={handleApplyTitle}
-              onSummaryApply={handleApplySummary}
-              onSeoApply={handleApplySeo}
             />
           </div>
         </div>

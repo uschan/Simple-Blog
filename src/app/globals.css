@@ -51,7 +51,7 @@ body {
   visibility: hidden;
 }
 
-hr {
+.article-content hr {
   margin-bottom: 1rem;
 }
 

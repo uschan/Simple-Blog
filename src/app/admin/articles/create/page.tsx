@@ -366,7 +366,7 @@ const MediaLibraryModal = ({ isOpen, onClose, onSelect, mediaType }: {
                       <img
                         src={mediaUrl}
                         alt={fileLabel}
-                        className="w-full h-24 object-cover"
+                        className="w-full h-32 object-cover"
                         loading="lazy"
                         onError={(e) => {
                           console.error('图片加载失败:', mediaUrl);
@@ -380,7 +380,7 @@ const MediaLibraryModal = ({ isOpen, onClose, onSelect, mediaType }: {
                         }}
                       />
                     ) : (
-                      <div className="w-full h-24 bg-gray-200 dark:bg-zinc-700 flex flex-col items-center justify-center">
+                      <div className="w-full h-32 bg-gray-200 dark:bg-zinc-700 flex flex-col items-center justify-center">
                         <i className={`fas fa-${isVideoFile(item) ? 'film' : 'file'} text-2xl text-gray-400 mb-1`}></i>
                         <span className="text-xs text-gray-500">{isVideoFile(item) ? '视频' : '文件'}</span>
                       </div>

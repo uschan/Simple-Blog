@@ -71,8 +71,8 @@ const ArticleCard = ({ article, className = '' }: { article: Article, className?
           ))}
         </div>
         
-        <Link href={`/article/${article.slug}`} className="mb-12 group">
-          <h2 className="text-white text-lg sm:text-xl lg:text-2xl font-medium mb-1 line-clamp-2 transition-colors">
+        <Link href={`/article/${article.slug}`} className="group">
+          <h2 className="mb-8 text-white text-base sm:text-xl lg:text-xl font-medium mb-1 line-clamp-2 transition-colors">
             {article.title}
           </h2>
         </Link>

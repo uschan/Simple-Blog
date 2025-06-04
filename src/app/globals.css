@@ -51,6 +51,10 @@ body {
   visibility: hidden;
 }
 
+hr {
+  margin-bottom: 1rem;
+}
+
 /* 管理后台样式 */
 .admin-aside {
   width: 280px;

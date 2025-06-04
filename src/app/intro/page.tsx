@@ -9,14 +9,14 @@ export const metadata = {
 
 export default function IntroPage() {
   return (
-    <div className="container mx-auto px-4 py-8">
+    <div className="container mx-auto p-4">
       {/* 顶部横幅 */}
-      <div className="relative bg-gradient-to-r from-blue-500 to-indigo-600 rounded-xl overflow-hidden mb-12">
+      <div className="relative bg-gradient-to-r from-blue-500 to-indigo-600 rounded-xl overflow-hidden mb-8">
         <div className="absolute inset-0 opacity-20 bg-[url('data:image/svg+xml,%3Csvg%20width%3D%2760%27%20height%3D%2760%27%20viewBox%3D%270%200%2060%2060%27%20xmlns%3D%27http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%27%3E%3Cg%20fill%3D%27none%27%20fill-rule%3D%27evenodd%27%3E%3Cg%20fill%3D%27%23ffffff%27%20fill-opacity%3D%270.2%27%3E%3Cpath%20d%3D%27M36%2034v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6%2034v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6%204V0H4v4H0v2h4v4h2V6h4V4H6z%27%2F%3E%3C%2Fg%3E%3C%2Fg%3E%3C%2Fsvg%3E')]"></div>
         <div className="relative z-10 py-8 px-8 text-white text-center">
-          <h1 className="text-3xl md:text-5xl font-bold mb-4">野盐博客系统</h1>
+          <h1 className="text-3xl md:text-5xl font-bold mb-4">野盐博客系统<i className="fa-solid fa-blog text-2xl ml-2"></i></h1>
           <p className="text-base md:text-2xl font-light max-w-3xl mx-auto">
-            现代化的AI驱动内容创作与分享平台
+            优雅的AI驱动内容创作与分享平台
           </p>
           <p className="text-sm md:text-lg italic mt-4 text-blue-100">
             为追求独立创作空间的内容创作者打造
@@ -26,26 +26,26 @@ export default function IntroPage() {
 
       {/* 项目统计 */}
       <div className="grid grid-cols-3 md:grid-cols-3 gap-6  mb-6">
-        <div className="bg-white dark:bg-zinc-800 rounded-lg shadow-md p-6 text-center transition-transform hover:-translate-y-1 duration-300">
+        <div className="bg-white dark:bg-zinc-900 rounded-lg border border-gray-200 dark:border-0 p-6 text-center transition-transform hover:-translate-y-1 duration-300">
           <div className="text-lg md:text-4xl font-bold text-blue-500 mb-2">145</div>
           <div className="text-gray-600 dark:text-gray-400 text-xs md:text-lg font-medium">源代码文件</div>
         </div>
-        <div className="bg-white dark:bg-zinc-800 rounded-lg shadow-md p-6 text-center transition-transform hover:-translate-y-1 duration-300">
+        <div className="bg-white dark:bg-zinc-900 rounded-lg border border-gray-200 dark:border-0 p-6 text-center transition-transform hover:-translate-y-1 duration-300">
           <div className="text-lg md:text-4xl font-bold text-blue-500 mb-2">19,733</div>
           <div className="text-gray-600 dark:text-gray-400 text-xs md:text-lg  font-medium">行代码</div>
         </div>
-        <div className="bg-white dark:bg-zinc-800 rounded-lg shadow-md p-6 text-center transition-transform hover:-translate-y-1 duration-300">
+        <div className="bg-white dark:bg-zinc-900 rounded-lg border border-gray-200 dark:border-0 p-6 text-center transition-transform hover:-translate-y-1 duration-300">
           <div className="text-lg md:text-4xl font-bold text-blue-500 mb-2">24,996</div>
           <div className="text-gray-600 dark:text-gray-400 text-xs md:text-lg  font-medium">总项目规模</div>
         </div>
       </div>
 
       {/* 核心特色 */}
-      <h2 className="text-2xl font-bold mb-4 text-center">🌟 核心特色</h2>
+      <h2 className="text-2xl font-bold mb-4 text-center"><i className="fa-solid fa-head-side-virus"></i> 核心特色</h2>
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8  mb-6">
-        <div className="bg-blue-50 dark:bg-zinc-800 rounded-lg p-6 border-l-4 border-blue-500">
+        <div className="bg-blue-50 dark:bg-zinc-900 rounded-lg p-6 border-l-4 border-blue-500">
           <h3 className="flex items-center text-base font-semibold text-blue-800 mb-4">
-            <span className="text-2xl mr-2">🤖</span> AI驱动创作
+            <span className="text-2xl mr-2"><i className="fa-solid fa-wand-magic-sparkles"></i></span> AI驱动创作
           </h3>
           <ul className="space-y-2  text-sm text-gray-700 dark:text-gray-300">
             <li className="flex items-start">
@@ -54,7 +54,7 @@ export default function IntroPage() {
             </li>
             <li className="flex items-start">
               <span className="text-blue-500 dark:text-blue-400 mr-2">•</span>
-              <span>未来接入ChatGPT、Gemini、Grok3、Sora等AI模型</span>
+              <span>未来接入ChatGPT、Gemini、Grok3等AI模型</span>
             </li>
             <li className="flex items-start">
               <span className="text-blue-500 dark:text-blue-400 mr-2">•</span>
@@ -67,14 +67,14 @@ export default function IntroPage() {
           </ul>
         </div>
 
-        <div className="bg-green-50 dark:bg-zinc-800 rounded-lg p-6 border-l-4 border-green-500">
+        <div className="bg-green-50 dark:bg-zinc-900 rounded-lg p-6 border-l-4 border-green-500">
           <h3 className="flex items-center text-base font-semibold text-green-800 mb-4">
-            <span className="text-2xl mr-2">🚀</span> 技术先进
+            <span className="text-2xl mr-2"><i className="fa-solid fa-microchip"></i></span> 技术先进
           </h3>
           <ul className="space-y-2  text-sm text-gray-700 dark:text-gray-300">
             <li className="flex items-start">
               <span className="text-green-500 dark:text-green-400 mr-2">•</span>
-              <span>基于Next.js 14的App Router架构</span>
+              <span>基于Next.js 15.3.2的App Router架构</span>
             </li>
             <li className="flex items-start">
               <span className="text-green-500 dark:text-green-400 mr-2">•</span>
@@ -91,9 +91,9 @@ export default function IntroPage() {
           </ul>
         </div>
 
-        <div className="bg-amber-50 dark:bg-zinc-800 rounded-lg p-6 border-l-4 border-amber-500">
+        <div className="bg-amber-50 dark:bg-zinc-900 rounded-lg p-6 border-l-4 border-amber-500">
           <h3 className="flex items-center text-base font-semibold text-amber-800 mb-4">
-            <span className="text-2xl mr-2">🎨</span> 精美设计
+            <span className="text-2xl mr-2"><i className="fa-solid fa-palette"></i></span> 精美设计
           </h3>
           <ul className="space-y-2  text-sm text-gray-700 dark:text-gray-300">
             <li className="flex items-start">
@@ -115,9 +115,9 @@ export default function IntroPage() {
           </ul>
         </div>
 
-        <div className="bg-blue-50 dark:bg-zinc-800 rounded-lg p-6 border-l-4 border-blue-500">
+        <div className="bg-blue-50 dark:bg-zinc-900 rounded-lg p-6 border-l-4 border-blue-500">
           <h3 className="flex items-center text-base font-semibold text-blue-800 mb-4">
-            <span className="text-2xl mr-2">💬</span> 互动体验
+            <span className="text-2xl mr-2"><i className="fa-solid fa-comments"></i></span> 互动体验
           </h3>
           <ul className="space-y-2  text-sm text-gray-700 dark:text-gray-300">
             <li className="flex items-start">
@@ -139,9 +139,9 @@ export default function IntroPage() {
           </ul>
         </div>
 
-        <div className="bg-red-50 dark:bg-zinc-800 rounded-lg p-6 border-l-4 border-red-500">
+        <div className="bg-red-50 dark:bg-zinc-900 rounded-lg p-6 border-l-4 border-red-500">
           <h3 className="flex items-center text-base font-semibold text-red-800 mb-4">
-            <span className="text-2xl mr-2">📱</span> 移动优先
+            <span className="text-2xl mr-2"><i className="fa-solid fa-mobile-screen-button"></i></span> 移动优先
           </h3>
           <ul className="space-y-2  text-sm text-gray-700 dark:text-gray-300">
             <li className="flex items-start">
@@ -163,9 +163,9 @@ export default function IntroPage() {
           </ul>
         </div>
 
-        <div className="bg-purple-50 dark:bg-zinc-800 rounded-lg p-6 border-l-4 border-purple-500">
+        <div className="bg-purple-50 dark:bg-zinc-900 rounded-lg p-6 border-l-4 border-purple-500">
           <h3 className="flex items-center text-base font-semibold text-purple-800 mb-4">
-            <span className="text-2xl mr-2">🌟</span> 开源与个性化
+            <span className="text-2xl mr-2"><i className="fa-solid fa-code"></i></span> 开源与个性化
           </h3>
           <ul className="space-y-2  text-sm text-gray-700 dark:text-gray-300">
             <li className="flex items-start">
@@ -189,11 +189,11 @@ export default function IntroPage() {
       </div>
 
       {/* AI创作助手 */}
-      <h2 className="text-2xl font-bold mb-4 text-center">🤖 AI创作助手</h2>
-      <div className="bg-gray-50 dark:bg-zinc-800 rounded-xl p-8  mb-6 shadow-sm">
+      <h2 className="text-2xl font-bold mb-4 text-center"><i className="fa-solid fa-robot"></i> AI创作助手</h2>
+      <div className="bg-white dark:bg-zinc-900 rounded-lg border border-gray-200 dark:border-0 p-6 mb-6">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-4">
           <div>
-            <h3 className="text-base font-semibold text-primary border-b-2 border-blue-500 pb-2 mb-4 inline-block">
+            <h3 className="text-base font-semibold text-primary border-b-2 border-blue-500 pb-2 mb-2 inline-block">
               智能写作面板
             </h3>
             <p className="text-sm text-gray-700 dark:text-gray-300">
@@ -201,7 +201,7 @@ export default function IntroPage() {
             </p>
           </div>
           <div>
-            <h3 className="text-base font-semibold text-primary border-b-2 border-blue-500 pb-2 mb-4 inline-block">
+            <h3 className="text-base font-semibold text-primary border-b-2 border-blue-500 pb-2 mb-2 inline-block">
               AI图像生成
             </h3>
             <p className="text-sm text-gray-700 dark:text-gray-300">
@@ -211,7 +211,7 @@ export default function IntroPage() {
         </div>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-4">
           <div>
-            <h3 className="text-base font-semibold text-primary border-b-2 border-blue-500 pb-2 mb-4 inline-block">
+            <h3 className="text-base font-semibold text-primary border-b-2 border-blue-500 pb-2 mb-2 inline-block">
               智能内容优化
             </h3>
             <p className="text-sm text-gray-700 dark:text-gray-300">
@@ -219,7 +219,7 @@ export default function IntroPage() {
             </p>
           </div>
           <div>
-            <h3 className="text-base font-semibold text-primary border-b-2 border-blue-500 pb-2 mb-4 inline-block">
+            <h3 className="text-base font-semibold text-primary border-b-2 border-blue-500 pb-2 mb-2 inline-block">
               草稿智能完善
             </h3>
             <p className="text-sm text-gray-700 dark:text-gray-300">
@@ -229,40 +229,40 @@ export default function IntroPage() {
         </div>
         <div className="bg-blue-50 dark:bg-zinc-800 border-l-4 border-blue-500 p-4 rounded-md">
           <p className="text-sm text-blue-800 dark:text-blue-400">
-            🚀 未来计划：接入更多AI模型（ChatGPT、Gemini、Grok3、Sora等），提供更丰富的AI创作体验和视频内容生成能力。
+            🚀 未来计划：接入更多AI模型（ChatGPT、Gemini、Grok3、Sora、即梦、豆包等），提供更丰富的AI创作体验和视频内容生成能力。
           </p>
         </div>
       </div>
 
       {/* 为什么选择野盐博客 */}
-      <h2 className="text-2xl font-bold mb-4 text-center">💡 为什么选择野盐博客？</h2>
+      <h2 className="text-2xl font-bold mb-4 text-center"><i className="fa-solid fa-lightbulb"></i> 为什么选择野盐博客？</h2>
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6  mb-6">
-        <div className="bg-white dark:bg-zinc-800 rounded-lg shadow-md p-6 flex flex-col transition-transform hover:-translate-y-1 duration-300">
-          <div className="text-blue-500 text-3xl mb-4">✨</div>
+        <div className="bg-white dark:bg-zinc-900 rounded-lg border border-gray-200 dark:border-0 p-6 text-center transition-transform hover:-translate-y-1 duration-300">
+          <div className="text-blue-500 text-3xl mb-4"><i className="fa-solid fa-user-secret"></i></div>
           <h3 className="text-base font-semibold text-primary mb-3">远离喧嚣，专注创作</h3>
           <p className="text-sm text-gray-700 dark:text-gray-300 flex-grow">
             为内向型创作者打造安静独立的创作空间，远离新媒体平台的嘈杂环境，让您能够专注于真正有价值的内容创作。
           </p>
         </div>
         
-        <div className="bg-white dark:bg-zinc-800 rounded-lg shadow-md p-6 flex flex-col transition-transform hover:-translate-y-1 duration-300">
-          <div className="text-blue-500 text-3xl mb-4">🔐</div>
+        <div className="bg-white dark:bg-zinc-900 rounded-lg border border-gray-200 dark:border-0 p-6 text-center transition-transform hover:-translate-y-1 duration-300">
+          <div className="text-blue-500 text-3xl mb-4"><i className="fa-solid fa-lock"></i></div>
           <h3 className="text-base font-semibold text-primary mb-3">完全掌控您的内容</h3>
           <p className="text-sm text-gray-700 dark:text-gray-300 flex-grow">
             作为开源项目，您拥有对平台的完全控制权，不受第三方平台规则限制，内容永远属于您自己，不会被随意删除或限流。
           </p>
         </div>
         
-        <div className="bg-white dark:bg-zinc-800 rounded-lg shadow-md p-6 flex flex-col transition-transform hover:-translate-y-1 duration-300">
-          <div className="text-blue-500 text-3xl mb-4">🧠</div>
+        <div className="bg-white dark:bg-zinc-900 rounded-lg border border-gray-200 dark:border-0 p-6 text-center transition-transform hover:-translate-y-1 duration-300">
+          <div className="text-blue-500 text-3xl mb-4"><i className="fa-solid fa-brain"></i></div>
           <h3 className="text-base font-semibold text-primary mb-3">AI增强创作能力</h3>
           <p className="text-sm text-gray-700 dark:text-gray-300 flex-grow">
             Deepseek AI深度集成，帮助您克服创作瓶颈，提升内容质量。未来将接入更多AI模型，持续增强您的创作体验。
           </p>
         </div>
         
-        <div className="bg-white dark:bg-zinc-800 rounded-lg shadow-md p-6 flex flex-col transition-transform hover:-translate-y-1 duration-300">
-          <div className="text-blue-500 text-3xl mb-4">🎯</div>
+        <div className="bg-white dark:bg-zinc-900 rounded-lg border border-gray-200 dark:border-0 p-6 text-center transition-transform hover:-translate-y-1 duration-300">
+          <div className="text-blue-500 text-3xl mb-4"><i className="fa-solid fa-bullseye"></i></div>
           <h3 className="text-base font-semibold text-primary mb-3">打造个人品牌</h3>
           <p className="text-sm text-gray-700 dark:text-gray-100 flex-grow">
             通过独立博客建立您的个人品牌和专业形象，展示您的专业知识和独特见解，为职业发展和个人影响力打下基础。
@@ -271,9 +271,9 @@ export default function IntroPage() {
       </div>
 
       {/* 底部行动号召 */}
-      <div className="text-center p-6 mb-4 bg-gray-50 dark:bg-zinc-800 rounded-xl">
+      <div className="text-center p-6 mb-4 bg-gray-50 dark:bg-zinc-900 rounded-xl">
         <h2 className="text-2xl font-bold mb-4 text-primary dark:text-white">开启您的内容创作之旅</h2>
-        <p className="text-primary max-w-2xl mx-auto mb-4">
+        <p className="text-sm text-primary max-w-2xl mx-auto mb-4">
           野盐博客系统不仅是一个展示内容的平台，更是一个连接创作者与读者的桥梁。通过AI驱动的创作体验和精美的设计，让您的内容创作更加轻松高效。
         </p>
         <div className="flex justify-center space-x-4 flex-wrap">
@@ -287,8 +287,8 @@ export default function IntroPage() {
       </div>
 
       {/* 页脚 */}
-      <div className="text-center py-8 text-gray-500">
-        野盐博客系统 V1.0 | 由Next.js和AI技术驱动
+      <div className="text-sm text-center py-4 text-gray-500">
+        野盐博客系统 V1.0 | 由Next.js和AI技术驱动, 野盐独立开发
       </div>
     </div>
   );

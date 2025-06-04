@@ -65,6 +65,10 @@ body .article-content code, .article-content pre {
   line-height: 1.5;
 }
 
+.article-content hr {
+  margin-bottom: 1rem;
+}
+
 .article-content a {
   color: #db5534; 
   margin: 0 5px;

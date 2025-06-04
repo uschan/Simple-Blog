@@ -51,9 +51,6 @@ body {
   visibility: hidden;
 }
 
-.article-content hr {
-  margin-bottom: 1rem;
-}
 
 /* 管理后台样式 */
 .admin-aside {

@@ -66,29 +66,70 @@ export default function AiAssistant({
   
   // 从分析结果中提取URL并应用
   const handleApplyURL = () => {
-    // 1. 首先尝试获取"英文URL"部分下方带双引号的内容
-    const urlSectionMatch = analysisResult.match(/(?:英文URL|URL)(?:[^"]*?)[""]([a-z0-9-]+)[""]/i);
+    console.log('[提取URL] 开始分析结果:', analysisResult.substring(0, 500));
     
     let slug = '';
-    if (urlSectionMatch && urlSectionMatch[1]) {
-      slug = urlSectionMatch[1];
-    } else {
-      // 2. 备选方案：查找任何看起来像URL slug的双引号内容
-      const anyUrlMatch = analysisResult.match(/[""]([a-z0-9-]{3,50})[""]/)
-      if (anyUrlMatch && anyUrlMatch[1]) {
-        slug = anyUrlMatch[1];
+    
+    // 1. 尝试多种格式匹配URL slug
+    // 格式1: 英文URL: "slug-here" 或 英文URL："slug-here"
+    const urlSectionMatch1 = analysisResult.match(/(?:英文URL|URL)[:：]\s*["""]([a-z0-9-]+)["""]/i);
+    if (urlSectionMatch1 && urlSectionMatch1[1]) {
+      slug = urlSectionMatch1[1];
+      console.log('[提取URL] 通过格式1匹配到:', slug);
+    }
+    
+    // 格式2: 英文URL建议: slug-here 或 英文URL建议：slug-here
+    if (!slug) {
+      const urlSectionMatch2 = analysisResult.match(/(?:英文URL|URL)(?:建议)?[:：]\s*([a-z0-9-]{3,50})(?:\s|$|\n)/i);
+      if (urlSectionMatch2 && urlSectionMatch2[1]) {
+        slug = urlSectionMatch2[1];
+        console.log('[提取URL] 通过格式2匹配到:', slug);
+      }
+    }
+    
+    // 格式3: 查找任何带引号的slug格式（中文引号、英文引号）
+    if (!slug) {
+      const urlSectionMatch3 = analysisResult.match(/["""]([a-z0-9-]{3,50})["""]/);
+      if (urlSectionMatch3 && urlSectionMatch3[1]) {
+        slug = urlSectionMatch3[1];
+        console.log('[提取URL] 通过格式3匹配到:', slug);
+      }
+    }
+    
+    // 格式4: 查找类似 "slug-here" 或 slug-here 的格式（在URL相关行中）
+    if (!slug) {
+      const lines = analysisResult.split('\n');
+      for (const line of lines) {
+        if (/URL|url|链接|slug/i.test(line)) {
+          const match = line.match(/([a-z0-9-]{3,50})/);
+          if (match && match[1]) {
+            slug = match[1];
+            console.log('[提取URL] 通过格式4匹配到:', slug);
+            break;
+          }
+        }
+      }
+    }
+    
+    // 格式5: 直接查找符合slug格式的字符串（作为最后备选）
+    if (!slug) {
+      const slugMatch = analysisResult.match(/\b([a-z0-9]+(?:-[a-z0-9]+){2,})\b/);
+      if (slugMatch && slugMatch[1]) {
+        slug = slugMatch[1];
+        console.log('[提取URL] 通过格式5匹配到:', slug);
       }
     }
     
     if (!slug) {
-      setError('无法从AI分析结果中提取URL');
+      console.error('[提取URL] 无法从分析结果中提取URL');
+      setError('无法从AI分析结果中提取URL，请检查分析结果格式');
       return;
     }
     
-    // 简单提取可能的标签
+    // 提取标签
     const potentialTags: string[] = [];
     
-    // 1. 查找 #开头的单词
+    // 1. 查找 #开头的标签
     const hashTags = analysisResult.match(/#([a-zA-Z0-9\u4e00-\u9fa5]+)/g);
     if (hashTags) {
       hashTags.forEach(tag => {
@@ -99,23 +140,41 @@ export default function AiAssistant({
       });
     }
     
-    // 2. 查找标签关键词部分的列表项
-    const keywordSection = analysisResult.match(/(?:标签关键词|标签|关键词)[^\n]*\n([\s\S]+?)(?:\n\n|\n---|\n###|$)/i);
-    if (keywordSection && keywordSection[1]) {
-      const keywordText = keywordSection[1];
-      const listItems = keywordText.match(/(?:^|\n)[-•*]\s*(?:#)?([^\n]+)/g);
-      
-      if (listItems) {
-        listItems.forEach(item => {
-          const clean = item
-            .replace(/^[-•*]\s*/, '') // 移除列表符号
-            .replace(/^#\s*/, '')     // 移除#号
-            .trim();
-          
-          if (clean && !potentialTags.includes(clean) && clean.length < 20 && !clean.includes('*')) {
-            potentialTags.push(clean);
-          }
-        });
+    // 2. 查找标签关键词部分的列表项（支持多种格式）
+    const keywordPatterns = [
+      /(?:标签关键词|标签|关键词|适用场景|场景)[:：]?\s*\n([\s\S]+?)(?:\n\n|\n---|\n###|$)/i,
+      /(?:标签|关键词)[:：]?\s*([^\n]+)/i
+    ];
+    
+    for (const pattern of keywordPatterns) {
+      const keywordSection = analysisResult.match(pattern);
+      if (keywordSection && keywordSection[1]) {
+        const keywordText = keywordSection[1];
+        // 匹配列表项：- item, • item, * item, 1. item 等
+        const listItems = keywordText.match(/(?:^|\n)[-•*•\d+\.]\s*(?:#)?([^\n,，]+)/g);
+        
+        if (listItems) {
+          listItems.forEach(item => {
+            const clean = item
+              .replace(/^[-•*•\d+\.]\s*/, '') // 移除列表符号
+              .replace(/^#\s*/, '')     // 移除#号
+              .replace(/[,，]$/, '')     // 移除末尾逗号
+              .trim();
+            
+            if (clean && !potentialTags.includes(clean) && clean.length < 20 && !clean.includes('*')) {
+              potentialTags.push(clean);
+            }
+          });
+        } else {
+          // 如果没有列表格式，尝试提取逗号分隔的内容
+          const commaSeparated = keywordText.split(/[,，、]/);
+          commaSeparated.forEach(item => {
+            const clean = item.trim();
+            if (clean && !potentialTags.includes(clean) && clean.length < 20) {
+              potentialTags.push(clean);
+            }
+          });
+        }
       }
     }
     
@@ -128,18 +187,21 @@ export default function AiAssistant({
       });
     }
     
-    // 使用简单的标签列表
-    let selectedTags = potentialTags;
+    // 清理和限制标签数量
+    let selectedTags = potentialTags
+      .filter(tag => tag && tag.length > 0 && tag.length < 20)
+      .slice(0, 7); // 最多保留7个标签
     
-    // 如果标签数量过多，可能会误选一些非标签内容，则只保留前5个
-    if (selectedTags.length > 7) {
-      selectedTags = selectedTags.slice(0, 5);
+    console.log('[提取URL] 最终提取结果:');
+    console.log('  - URL slug:', slug);
+    console.log('  - Tags:', selectedTags);
+    
+    if (slug) {
+      onSeoApply(slug, selectedTags);
+      setError(''); // 清除之前的错误
+    } else {
+      setError('无法从AI分析结果中提取URL');
     }
-    
-    console.log('提取的URL:', slug);
-    console.log('提取的标签:', selectedTags);
-    
-    onSeoApply(slug, selectedTags);
   };
   
   // 提取并应用内容

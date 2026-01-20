@@ -36,12 +36,13 @@ export async function GET(request: NextRequest) {
         ]),
         [STANDARD_FIELD_NAMES.ANALYTICS_TYPE]: 'google',
         [STANDARD_FIELD_NAMES.ANALYTICS_CODE]: `<!-- Google tag (gtag.js) -->
-<script async src="https://www.googletagmanager.com/gtag/js?id=GTM-N5XXDXFQ"></script>
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-Y9R0Z1E58M"></script>
 <script>
   window.dataLayer = window.dataLayer || [];
   function gtag(){dataLayer.push(arguments);}
   gtag('js', new Date());
-  gtag('config', 'GTM-N5XXDXFQ');
+
+  gtag('config', 'G-Y9R0Z1E58M');
 </script>`
       };
       

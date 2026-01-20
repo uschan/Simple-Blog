@@ -252,12 +252,12 @@ export default function ArticleGrid({ initialArticles, className = '' }: Article
     // 在服务端渲染时使用固定列数
     if (typeof window === 'undefined' || windowWidth === 0) return 3; // 默认列数
     
-    if (windowWidth < 640) return 1; // 移动设备
-    if (windowWidth < 768) return 2; // 小屏设备
-    if (windowWidth < 1024) return 3; // 平板
-    if (windowWidth < 1280) return 4; // 小桌面
-    if (windowWidth < 1536) return 5; // 小桌面
-    if (windowWidth < 1920) return 5; // 小桌面
+    if (windowWidth < 641) return 1; // 移动设备
+    if (windowWidth < 767) return 2; // 小屏设备
+    if (windowWidth < 1025) return 3; // 平板
+    if (windowWidth < 1281) return 4; // 小桌面
+    if (windowWidth < 1537) return 5; // 小桌面
+    if (windowWidth < 1921) return 5; // 小桌面
     return 6; // 大屏设备
   };
 

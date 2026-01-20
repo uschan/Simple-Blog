@@ -257,6 +257,7 @@ export default function ArticleGrid({ initialArticles, className = '' }: Article
     if (windowWidth < 1024) return 3; // 平板
     if (windowWidth < 1280) return 4; // 小桌面
     if (windowWidth < 1536) return 5; // 小桌面
+    if (windowWidth < 1920) return 5; // 小桌面
     return 6; // 大屏设备
   };
 

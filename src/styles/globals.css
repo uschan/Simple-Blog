@@ -232,7 +232,7 @@ body .article-content code, .article-content pre {
   @media (min-width: 1536px) {
 
     .container {
-      max-width: 100%;
+      max-width: 1560px;
     }
   }
   @media (min-width: 2048px) {

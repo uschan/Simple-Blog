@@ -179,15 +179,15 @@ export default async function Home() {
 
   return (
     <div className="container mx-auto p-4">
-      {/* 顶部轮播区域 */}
-      <div className="mb-4">
+      {/* 顶部轮播区域 - 在手机和iPad上隐藏 */}
+      <div className="mb-4 hidden lg:block">
         <HeroSlider articles={sliderArticles} />
       </div>
 
-      {/* 特色文章区域 */}
-      <div className="mb-4">
+      {/* 特色文章区域 - 在手机和iPad上隐藏 */}
+      <div className="mb-4 hidden lg:block">
         <h2 className="px-4 py-2 text-lg font-medium underline underline-offset-8 decoration-sky-500 decoration-wavy rounded-lg mb-4 flex items-center">
-        <i className="fa-regular fa-face-kiss-wink-heart text-3xl text-sky-500 mr-3"></i>
+          <i className="fa-regular fa-face-kiss-wink-heart text-3xl text-sky-500 mr-3"></i>
           推荐阅读
         </h2>
         {featuredApiArticles.length === 0 ? (
@@ -195,24 +195,24 @@ export default async function Home() {
             <p className="text-gray-500">暂无特色文章</p>
           </div>
         ) : (
-        <div className="grid grid-cols-1 md:grid-cols-4 lg:grid-cols-4 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-4 lg:grid-cols-4 gap-6">
             {featuredApiArticles.map(article => (
               <div key={article._id} className="text-sm bg-bg-card rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-shadow border border-gray-200">
-              <div className="relative">
+                <div className="relative">
                   {/* 固定比例的图片容器 */}
                   <div className="relative h-[200px]" style={{ position: 'relative' }}>
                     <Link href={`/article/${article.slug}`}>
-                    <OptimizedImage 
-                      src={article.featuredImage || article.coverImage 
-                        ? convertToApiImageUrl(article.featuredImage || article.coverImage || '') 
-                        : '/images/default.jpg'} 
-                      alt={article.title}
-                      fill
-                      className="object-cover"
-                      optimizeImage={true}
-                      imageFormat="webp"
-                      quality={85}
-                    />
+                      <OptimizedImage 
+                        src={article.featuredImage || article.coverImage 
+                          ? convertToApiImageUrl(article.featuredImage || article.coverImage || '') 
+                          : '/images/default.jpg'} 
+                        alt={article.title}
+                        fill
+                        className="object-cover"
+                        optimizeImage={true}
+                        imageFormat="webp"
+                        quality={85}
+                      />
                     </Link>
                     {/* 分类标签 */}
                     <div className="absolute top-2.5 left-2.5 flex space-x-2 z-20">
@@ -226,53 +226,53 @@ export default async function Home() {
                     </div>
                   </div>
                 </div>
-              
-              <div className="px-4 py-2">
-                <Link href={`/article/${article.slug}`}>
-                  <h3 className="text-base font-bold text-primary mb-2">{article.title}</h3>
-                </Link>             
-                <div className="flex items-center mb-2">
-                  <i className="fa-solid fa-user-astronaut mr-1"></i>
+                
+                <div className="px-4 py-2">
+                  <Link href={`/article/${article.slug}`}>
+                    <h3 className="text-base font-bold text-primary mb-2">{article.title}</h3>
+                  </Link>             
+                  <div className="flex items-center mb-2">
+                    <i className="fa-solid fa-user-astronaut mr-1"></i>
                     <span className="text-xs text-text-light">
                       {article.authorName || '匿名'} | {formatDate(article.publishedAt || article.createdAt)}
                     </span>
-                </div>
-                  <p className="text-text-light mb-4">{article.excerpt || article.summary || ''}</p>
-                <div className="border-t border-gray-200 my-2"></div>
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center space-x-2">
-                    <EmojiReaction 
-                      article={{
-                        id: article._id,
-                        reactionCount: article.likes || 0,
-                        userReaction: 'like'
-                      }}
-                    />
                   </div>
-                  <div className="flex items-center text-sm text-text-light space-x-4">
-                    <div className="flex items-center">
-                      <i className="fa-solid fa-eye mr-1"></i>
-                        <span>{article.viewCount || 0}</span>
+                  <p className="text-text-light mb-4">{article.excerpt || article.summary || ''}</p>
+                  <div className="border-t border-gray-200 my-2"></div>
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center space-x-2">
+                      <EmojiReaction 
+                        article={{
+                          id: article._id,
+                          reactionCount: article.likes || 0,
+                          userReaction: 'like'
+                        }}
+                      />
                     </div>
-                    <ShareButton 
-                      url={`/article/${article.slug}`} 
-                      title={article.title}
-                      summary={article.excerpt || article.summary || ''}
-                    />
+                    <div className="flex items-center text-sm text-text-light space-x-4">
+                      <div className="flex items-center">
+                        <i className="fa-solid fa-eye mr-1"></i>
+                        <span>{article.viewCount || 0}</span>
+                      </div>
+                      <ShareButton 
+                        url={`/article/${article.slug}`} 
+                        title={article.title}
+                        summary={article.excerpt || article.summary || ''}
+                      />
+                    </div>
                   </div>
                 </div>
               </div>
-            </div>
-          ))}
+            ))}
           </div>
         )}
-        </div>
-        
-      {/* 分类区域 */}
-      <div className="mb-4">
+      </div>
+
+      {/* 分类区域 - 在手机和iPad上隐藏 */}
+      <div className="mb-4 hidden lg:block">
         <h2 className="px-4 py-2 text-lg font-medium underline underline-offset-8 decoration-green-500 decoration-wavy rounded-lg mb-4 flex items-center">
-        <i className="fa-regular fa-face-grin-squint-tears text-3xl text-green-500 mr-3 "></i>
-        探索分类
+          <i className="fa-regular fa-face-grin-squint-tears text-3xl text-green-500 mr-3 "></i>
+          探索分类
         </h2>
         <div className="grid grid-cols-3 md:grid-cols-6 gap-4">
           {featuredCategories.length > 0 ? (

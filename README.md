@@ -446,4 +446,4 @@ node scripts/create-admin.js
 
 ---
 
-**最后更新**: 2024年
+**最后更新**: 2026年

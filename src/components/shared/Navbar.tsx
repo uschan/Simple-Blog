@@ -277,9 +277,9 @@ export default function Navbar({ categories = [] }: { categories: Category[] }) 
               {formattedDate}
             </span>
             <span>|</span>
-            <Link href="https://wildsalt.me" target="_blank" className="text-text hover:text-primary">WILDSALT</Link>
-            <Link href="https://ci.wildsalt.me" target="_blank" className="text-text hover:text-primary">小词大意</Link>
-            <Link href="/intro" className="text-text hover:text-primary">野盐博客</Link>
+            <Link href="https://wildsaltlab.com" target="_blank" className="text-text hover:text-primary hidden lg:block">WILDSALT.LAB</Link>
+            <Link href="https://ci.wildsalt.me" target="_blank" className="text-text hover:text-primary hidden lg:block">小词大意</Link>
+            <Link href="/intro" className="text-text hover:text-primary hidden lg:block">野盐博客</Link>
           </div>
           <div className="flex items-center space-x-4">
             <Link href="/api/rss" target="_blank" className="text-text hover:text-primary" title="RSS订阅">
